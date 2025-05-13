@@ -5,6 +5,7 @@ import entidades.Producto;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;  // <- importa List
 
 public class ServicioInventario {
 
@@ -36,4 +37,12 @@ public class ServicioInventario {
                 p.fechaCaducidad(), p.activo());
         datos.actualizar(nuevo);
     }
+
+    /**
+     * Devuelve la lista de productos activos para poblar el ComboBox.
+     */
+    public List<Producto> listarProductos() {
+        return datos.listarProductos();
+    }
 }
+
