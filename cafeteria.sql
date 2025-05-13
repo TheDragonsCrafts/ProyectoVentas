@@ -14,18 +14,15 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+SET NAMES utf8mb4;
 
 --
 -- Base de datos: `cafeteria`
 --
 
 -- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `administradores`
---
-
+-- --------------------------------------------------------
 DROP TABLE IF EXISTS `administradores`;
 CREATE TABLE IF NOT EXISTS `administradores` (
   `id_administrador` int NOT NULL AUTO_INCREMENT,
@@ -45,11 +42,8 @@ CREATE TABLE IF NOT EXISTS `administradores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `productos`
---
-
+-- --------------------------------------------------------
 DROP TABLE IF EXISTS `productos`;
 CREATE TABLE IF NOT EXISTS `productos` (
   `id_producto` int NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del producto',
@@ -65,11 +59,8 @@ CREATE TABLE IF NOT EXISTS `productos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `ventas`
---
-
+-- --------------------------------------------------------
 DROP TABLE IF EXISTS `ventas`;
 CREATE TABLE IF NOT EXISTS `ventas` (
   `id_venta` int NOT NULL AUTO_INCREMENT COMMENT 'Identificador único de la venta',
@@ -84,38 +75,51 @@ CREATE TABLE IF NOT EXISTS `ventas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `detalles_venta`
---
-
+-- (id_producto ahora admite NULL y FK con ON DELETE SET NULL)
+-- --------------------------------------------------------
 DROP TABLE IF EXISTS `detalles_venta`;
 CREATE TABLE IF NOT EXISTS `detalles_venta` (
   `id_detalle_venta` int NOT NULL AUTO_INCREMENT COMMENT 'ID único de la línea de detalle',
   `id_venta` int NOT NULL COMMENT 'ID de la venta a la que pertenece (FK)',
-  `id_producto` int NOT NULL COMMENT 'ID del producto vendido (FK)',
+  `id_producto` int NULL COMMENT 'ID del producto vendido (FK) — ahora admite NULL',
   `cantidad` int NOT NULL COMMENT 'Cantidad de este producto vendido',
   `precio_en_venta` decimal(10,2) NOT NULL COMMENT 'Precio unitario al momento de la venta',
   PRIMARY KEY (`id_detalle_venta`),
-  UNIQUE KEY `uk_venta_producto` (`id_venta`,`id_producto`) COMMENT 'Evita duplicar el mismo producto en una sola venta',
+  UNIQUE KEY `uk_venta_producto` (`id_venta`,`id_producto`),
   KEY `fk_detallesventa_productos` (`id_producto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
---
--- Restricciones para tablas volcadas
---
-
+-- --------------------------------------------------------
 -- Restricciones para la tabla `ventas`
+-- --------------------------------------------------------
 ALTER TABLE `ventas`
-  ADD CONSTRAINT `fk_ventas_administradores` FOREIGN KEY (`id_administrador`) REFERENCES `administradores` (`id_administrador`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_ventas_administradores`
+    FOREIGN KEY (`id_administrador`)
+    REFERENCES `administradores` (`id_administrador`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE;
 
+-- --------------------------------------------------------
 -- Restricciones para la tabla `detalles_venta`
+-- - FK a ventas con ON DELETE CASCADE
+-- - FK a productos con ON DELETE SET NULL
+-- --------------------------------------------------------
 ALTER TABLE `detalles_venta`
-  ADD CONSTRAINT `fk_detallesventa_productos` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE RESTRICT,
-  ADD CONSTRAINT `fk_detallesventa_ventas` FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_detallesventa_ventas`
+    FOREIGN KEY (`id_venta`)
+    REFERENCES `ventas` (`id_venta`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_detallesventa_productos`
+    FOREIGN KEY (`id_producto`)
+    REFERENCES `productos` (`id_producto`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
 
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
