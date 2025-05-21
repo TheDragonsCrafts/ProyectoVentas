@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `administradores` (
 -- --------------------------------------------------------
 DROP TABLE IF EXISTS `productos`;
 CREATE TABLE IF NOT EXISTS `productos` (
-  `id_producto` int NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del producto',
+  `id_producto` int NOT NULL COMMENT 'Identificador único del producto',
   `nombre` varchar(150) NOT NULL COMMENT 'Nombre del producto',
   `descripción` text COMMENT 'Descripción detallada (opcional)',
   `precio` decimal(10,2) NOT NULL COMMENT 'Precio de venta unitario',

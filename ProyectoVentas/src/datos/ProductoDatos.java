@@ -11,23 +11,17 @@ import java.util.Optional;
 
 public class ProductoDatos {
 
-    /** Inserta un producto y devuelve el ID generado por la base de datos */
-    public int insertar(Producto p) throws SQLException {
+    /** Inserta un producto (el ID debe ser proporcionado por el llamador) */
+    public void insertar(Producto p) throws SQLException {
         String sql = """
             INSERT INTO productos
-              (nombre, descripción, precio, cantidad, fecha_caducidad, activo)
-            VALUES (?,?,?,?,?,?)
+              (id_producto, nombre, descripción, precio, cantidad, fecha_caducidad, activo)
+            VALUES (?,?,?,?,?,?,?)
             """;
         try (PreparedStatement ps = ConexionBD.obtener()
-                .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            cargar(ps, p, false);
+                .prepareStatement(sql)) {
+            cargar(ps, p, false); // 'false' meaning it's not an update
             ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                throw new SQLException("No se pudo obtener el ID generado");
-            }
         }
     }
 
@@ -100,19 +94,33 @@ public class ProductoDatos {
     }
 
     /* ==== Helpers ==== */
-    private void cargar(PreparedStatement ps, Producto p, boolean conId) throws SQLException {
-        ps.setString(1, p.nombre());
-        ps.setString(2, p.descripcion());
-        ps.setDouble(3, p.precio());
-        ps.setInt(4, p.cantidad());
-        if (p.fechaCaducidad() != null) {
-            ps.setDate(5, Date.valueOf(p.fechaCaducidad()));
-        } else {
-            ps.setNull(5, Types.DATE);
-        }
-        ps.setBoolean(6, p.activo());
-        if (conId) {
-            ps.setInt(7, p.id());
+    private void cargar(PreparedStatement ps, Producto p, boolean isUpdate) throws SQLException {
+        // If it's an update, ID is the last parameter in WHERE clause
+        // If it's an insert, ID is the first parameter
+        if (isUpdate) {
+            ps.setString(1, p.nombre());
+            ps.setString(2, p.descripcion());
+            ps.setDouble(3, p.precio());
+            ps.setInt(4, p.cantidad());
+            if (p.fechaCaducidad() != null) {
+                ps.setDate(5, Date.valueOf(p.fechaCaducidad()));
+            } else {
+                ps.setNull(5, Types.DATE);
+            }
+            ps.setBoolean(6, p.activo());
+            ps.setInt(7, p.id()); // For WHERE id_producto = ?
+        } else { // Is Insert
+            ps.setInt(1, p.id()); // New: id_producto for VALUES
+            ps.setString(2, p.nombre());
+            ps.setString(3, p.descripcion());
+            ps.setDouble(4, p.precio());
+            ps.setInt(5, p.cantidad());
+            if (p.fechaCaducidad() != null) {
+                ps.setDate(6, Date.valueOf(p.fechaCaducidad()));
+            } else {
+                ps.setNull(6, Types.DATE);
+            }
+            ps.setBoolean(7, p.activo());
         }
     }
 
@@ -127,6 +135,20 @@ public class ProductoDatos {
                 f != null ? f.toLocalDate() : null,
                 r.getBoolean("activo")
         );
+    }
+
+    public boolean idExiste(int id) {
+        String sql = "SELECT COUNT(*) FROM productos WHERE id_producto=?";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Or handle more gracefully
+        }
+        return false; // Default to false on error or if not found
     }
 }
 
