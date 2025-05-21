@@ -280,16 +280,23 @@ public class AltaYBaja extends javax.swing.JFrame {
         // 4) Insertar o actualizar (o eliminar si no está activo)
         if (activo) {
             Optional<Producto> existente = datos.buscarPorId(id);
-            if (existente.isPresent()) {
+            if (existente.isPresent()) { // Product exists, so update it
                 datos.actualizar(p);
-            } else {
-                // insertar y obtener el ID generado
-                int nuevoId = datos.insertar(p);
-                txtID.setText(String.valueOf(nuevoId));
+                JOptionPane.showMessageDialog(this,
+                    "Producto actualizado correctamente", // Changed message for clarity
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Product does not exist, so try to insert it
+                if (datos.idExiste(id)) { // Check if the chosen ID is already taken by another product
+                    JOptionPane.showMessageDialog(this,
+                        "Error: El ID de producto '" + id + "' ya existe. Por favor, elija un ID diferente.",
+                        "Error de Duplicado", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    datos.insertar(p); // 'insertar' is now void
+                    JOptionPane.showMessageDialog(this,
+                        "Producto guardado correctamente con ID " + id, // Message confirms user-provided ID
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
-            JOptionPane.showMessageDialog(this,
-                "Producto guardado correctamente",
-                "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } else {
             // baja del producto
             if (datos.buscarPorId(id).isEmpty()) {

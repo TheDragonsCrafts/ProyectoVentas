@@ -44,5 +44,21 @@ public class ServicioInventario {
     public List<Producto> listarProductos() {
         return datos.listarProductos();
     }
+
+    /**
+     * Agrega un nuevo producto al inventario.
+     * Verifica primero si el ID del producto ya existe.
+     *
+     * @param p El producto a agregar.
+     * @throws SQLException Si ocurre un error de base de datos durante la inserción.
+     * @throws Exception Si el ID del producto ya existe.
+     */
+    public void agregarNuevoProducto(Producto p) throws SQLException, Exception {
+        if (datos.idExiste(p.id())) {
+            throw new Exception("El ID de producto '" + p.id() + "' ya existe.");
+        }
+        // Si ocurre un error durante la inserción, ProductoDatos.insertar(p) lanzará SQLException
+        datos.insertar(p);
+    }
 }
 
