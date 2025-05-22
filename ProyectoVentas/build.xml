@@ -1,73 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- You may freely edit this file. See commented blocks below for -->
-<!-- some examples of how to customize the build. -->
-<!-- (If you delete it and reopen the project it will be recreated.) -->
-<!-- By default, only the Clean and Build commands use this build script. -->
-<!-- Commands such as Run, Debug, and Test only use this build script if -->
-<!-- the Compile on Save feature is turned off for the project. -->
-<!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
-<!-- in the project's Project Properties dialog box.-->
 <project name="ProyectoVentas" default="default" basedir=".">
     <description>Builds, tests, and runs the project ProyectoVentas.</description>
     <import file="nbproject/build-impl.xml"/>
+
+    <path id="libs.classpath">
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
+    <target name="-pre-init">
+        <mkdir dir="lib"/>
+    </target>
+
+    <target name="-do-compile" depends="init,deps-jar,-pre-pre-compile,-pre-compile, -copy-persistence-xml,-compile-depend" if="have.sources">
+        <j2seproject3:javac gensrcdir="${build.generated.sources.dir}">
+            <customize>
+                <classpath>
+                    <path refid="libs.classpath"/>
+                    <path path="${javac.classpath}"/>
+                </classpath>
+            </customize>
+        </j2seproject3:javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+        </copy>
+    </target>
+
+    <target name="run" depends="init,compile" description="Run a main class.">
+        <j2seproject1:java classname="${main.class}" modulename="${module.name}" modulepath="${run.modulepath}" upgrademodulepath="${run.upgrademodulepath}">
+            <customize>
+                <classpath>
+                    <path refid="libs.classpath"/>
+                    <path path="${run.classpath}"/>
+                </classpath>
+                <arg line="${application.args}"/>
+            </customize>
+        </j2seproject1:java>
+    </target>
+    
+    <target name="-post-jar">
+        <mkdir dir="${dist.dir}/lib"/>
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="lib" includes="*.jar"/>
+        </copy>
+        <condition property="main.class.available">
+            <and>
+                <isset property="main.class"/>
+                <not>
+                    <equals arg1="${main.class}" arg2="" trim="true"/>
+                </not>
+            </and>
+        </condition>
+        <condition property="do.archive">
+            <or>
+                <not>
+                    <istrue value="${jar.archive.disabled}"/>
+                </not>
+                <istrue value="${not.archive.disabled}"/>
+            </or>
+        </condition>
+        <condition property="do.mkdist">
+            <and>
+                <isset property="do.archive"/>
+                <isset property="libs.CopyLibs.classpath"/>
+                <not>
+                    <istrue value="${mkdist.disabled}"/>
+                </not>
+                <not>
+                    <available file="${build.classes.dir}/module-info.class"/>
+                </not>
+            </and>
+        </condition>
+        <target if="do.mkdist" name="-do-jar-copylibs-when-mkdist">
+            <j2seproject3:copylibs manifest="${tmp.manifest.file}">
+                 <customize>
+                    <attribute name="Class-Path" value="${jar.classpath} lib/hikaricp.jar lib/mysql-connector-j-8.2.0.jar lib/jbcrypt-0.4.jar"/>
+                 </customize>
+            </j2seproject3:copylibs>
+        </target>
+        <target name="-do-jar-copylibs-unless-mkdist" unless="do.mkdist">
+             <j2seproject1:jar manifest="${tmp.manifest.file}">
+                 <customize>
+                    <attribute name="Class-Path" value="${jar.classpath} lib/hikaricp.jar lib/mysql-connector-j-8.2.0.jar lib/jbcrypt-0.4.jar"/>
+                 </customize>
+             </j2seproject1:jar>
+        </target>
+        <antcall target="-do-jar-copylibs-when-mkdist"/>
+        <antcall target="-do-jar-copylibs-unless-mkdist"/>
+    </target>
+
     <!--
-
-    There exist several targets which are by default empty and which can be 
-    used for execution of your tasks. These targets are usually executed 
-    before and after some main targets. They are: 
-
-      -pre-init:                 called before initialization of project properties
-      -post-init:                called after initialization of project properties
-      -pre-compile:              called before javac compilation
-      -post-compile:             called after javac compilation
-      -pre-compile-single:       called before javac compilation of single file
-      -post-compile-single:      called after javac compilation of single file
-      -pre-compile-test:         called before javac compilation of JUnit tests
-      -post-compile-test:        called after javac compilation of JUnit tests
-      -pre-compile-test-single:  called before javac compilation of single JUnit test
-      -post-compile-test-single: called after javac compilation of single JUunit test
-      -pre-jar:                  called before JAR building
-      -post-jar:                 called after JAR building
-      -post-clean:               called after cleaning build products
-
-    (Targets beginning with '-' are not intended to be called on their own.)
-
-    Example of inserting an obfuscator after compilation could look like this:
-
-        <target name="-post-compile">
-            <obfuscate>
-                <fileset dir="${build.classes.dir}"/>
-            </obfuscate>
-        </target>
-
-    For list of available properties check the imported 
-    nbproject/build-impl.xml file. 
-
-
-    Another way to customize the build is by overriding existing main targets.
-    The targets of interest are: 
-
-      -init-macrodef-javac:     defines macro for javac compilation
-      -init-macrodef-junit:     defines macro for junit execution
-      -init-macrodef-debug:     defines macro for class debugging
-      -init-macrodef-java:      defines macro for class execution
-      -do-jar:                  JAR building
-      run:                      execution of project 
-      -javadoc-build:           Javadoc generation
-      test-report:              JUnit report generation
-
-    An example of overriding the target for project execution could look like this:
-
-        <target name="run" depends="ProyectoVentas-impl.jar">
-            <exec dir="bin" executable="launcher.exe">
-                <arg file="${dist.jar}"/>
-            </exec>
-        </target>
-
-    Notice that the overridden target depends on the jar target and not only on 
-    the compile target as the regular run target does. Again, for a list of available 
-    properties which you can use, check the target you are overriding in the
-    nbproject/build-impl.xml file. 
-
+    ============================================================================
+    TARGETS OVERRIDDEN FROM C:\Program Files\NetBeans-19\netbeans\java\ant\nblib\j2seproject.xml
+    ============================================================================
     -->
+    <target name="-do-jar-set-mainclass-without-libraries" if="main.class.available" unless="do.mkdist">
+        <manifest file="${tmp.manifest.file}" mode="update">
+            <attribute name="Main-Class" value="${main.class}"/>
+        </manifest>
+    </target>
+    <target name="-do-jar-set-mainclass-with-libraries" if="main.class.available" if="do.mkdist">
+        <manifest file="${tmp.manifest.file}" mode="update">
+            <attribute name="Main-Class" value="${main.class}"/>
+        </manifest>
+    </target>
+    <target name="-do-jar-add-splashscreen" if="splashscreen.available">
+        <basename file="${application.splash}" property="splashscreen.basename"/>
+        <mkdir dir="${build.classes.dir}/META-INF"/>
+        <copy failonerror="false" file="${application.splash}" todir="${build.classes.dir}/META-INF"/>
+        <manifest file="${tmp.manifest.file}" mode="update">
+            <attribute name="SplashScreen-Image" value="META-INF/${splashscreen.basename}"/>
+        </manifest>
+    </target>
+
 </project>

@@ -1,328 +1,414 @@
 package ui.ventas;
 
-import servicios.ServicioVentas;
-import servicios.ServicioInventario;
-import entidades.Producto;
 import entidades.DetalleVenta;
-import seguridad.Session;
-import ui.login.LoginFrame;
-
-import javax.swing.JOptionPane;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.table.DefaultTableModel;
+import entidades.Producto;
+import java.awt.event.KeyEvent;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import seguridad.Session;
+import servicios.ServicioVentas;
+// Importar las nuevas excepciones si se van a manejar aquí directamente
+import excepciones.StockInsuficienteException;
+import excepciones.ProductoNoEncontradoException;
+import excepciones.ProductoExpiradoException;
+import excepciones.ValidacionException;
+import excepciones.BaseDatosException;
 
-/**
- * Frame para procesar ventas.
- * Lee idAdmin desde Session, permite agregar/editar líneas,
- * muestra total y al “Pagar” invoca ServicioVentas.generarVenta.
- */
-public class Venta extends javax.swing.JFrame {
 
-    // Servicios
-    private final ServicioVentas servicioVentas = new ServicioVentas();
-    private final ServicioInventario servicioInv = new ServicioInventario();
+public class Venta extends javax.swing.JDialog {
+    private static final Logger LOGGER = Logger.getLogger(Venta.class.getName());
 
-    // Modelo de la tabla y listas de trabajo
-    private DefaultTableModel model;
-    private List<Producto> productosList;
-    private List<DetalleVenta> detallesList;
+    private final DefaultTableModel model;
+    private final List<Producto> productosList; // Lista de productos disponibles (para el ComboBox)
+    private final List<DetalleVenta> detallesVentaList; // Lista de detalles de la venta actual
 
-    // ID del administrador autenticado
-    private final int idAdmin;
-
-    /** Constructor: toma idAdmin de Session y prepara GUI */
-    public Venta() {
-        this.idAdmin = Session.getIdAdmin();
-        this.detallesList = new ArrayList<>();
+    public Venta(java.awt.Frame parent, boolean modal, List<Producto> productos) {
+        super(parent, modal);
         initComponents();
-        model = (DefaultTableModel) jTable1.getModel();
-        inicializarTabla();
-        cargarProductos();
-        // Mover listener aquí para evitar NPE
-        CBProducto.addActionListener(this::CBProductoActionPerformed);
+        this.productosList = productos; // Asigna la lista de productos pasada
+        this.detallesVentaList = new ArrayList<>();
+
+        // Configurar modelo de tabla
+        model = (DefaultTableModel) tablaDetalles.getModel();
+        actualizarTotalGeneral();
+
+        // Llenar ComboBox de productos
+        productos.forEach(p -> CbxProductos.addItem(p.nombre()));
     }
 
-    /** Código generado por NetBeans para crear los componentes */
+
     @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        CBProducto = new javax.swing.JComboBox<>();
+        CbxProductos = new javax.swing.JComboBox<>();
         jLabel2 = new javax.swing.JLabel();
-        SpinnerCantidad = new javax.swing.JSpinner();
+        SpnCantidad = new javax.swing.JSpinner();
         BtnAgregar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tablaDetalles = new javax.swing.JTable();
+        BtnEliminar = new javax.swing.JButton();
         BtnEditar = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
-        BtnPagar = new javax.swing.JButton();
+        LblTotal = new javax.swing.JLabel();
+        BtnConfirmarVenta = new javax.swing.JButton();
         BtnCancelar = new javax.swing.JButton();
-        txtPagoTotal = new javax.swing.JTextField();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Registrar Venta");
 
-        jPanel1.setBackground(new java.awt.Color(0, 102, 255));
+        jLabel1.setText("Producto:");
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24));
-        jLabel1.setText("Producto a vender");
+        jLabel2.setText("Cantidad:");
 
-        CBProducto.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        SpnCantidad.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
+        SpnCantidad.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                SpnCantidadKeyPressed(evt);
+            }
+        });
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24));
-        jLabel2.setText("Cantidad");
-
-        SpinnerCantidad.setFont(new java.awt.Font("Segoe UI", 0, 18));
-
-        BtnAgregar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnAgregar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18));
-        BtnAgregar.setForeground(new java.awt.Color(255, 255, 255));
         BtnAgregar.setText("Agregar");
-        BtnAgregar.addActionListener(this::BtnAgregarActionPerformed);
+        BtnAgregar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnAgregarActionPerformed(evt);
+            }
+        });
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {},
-            new String [] { "Producto", "Cantidad", "Precio unit.", "Subtotal" }
-        ));
-        jScrollPane1.setViewportView(jTable1);
+        tablaDetalles.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
 
-        BtnEditar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnEditar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18));
-        BtnEditar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnEditar.setText("Editar");
-        BtnEditar.addActionListener(this::BtnEditarActionPerformed);
+            },
+            new String [] {
+                "ID Producto", "Nombre", "Cantidad", "Precio Unit.", "Subtotal"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Double.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
 
-        jLabel3.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24));
-        jLabel3.setText("Total a Pagar");
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
-        BtnPagar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnPagar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18));
-        BtnPagar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnPagar.setText("Pagar");
-        BtnPagar.addActionListener(this::BtnPagarActionPerformed);
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(tablaDetalles);
 
-        BtnCancelar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnCancelar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18));
-        BtnCancelar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnCancelar.setText("Cancelar");
-        BtnCancelar.addActionListener(this::BtnCancelarActionPerformed);
+        BtnEliminar.setText("Eliminar Seleccionado");
+        BtnEliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnEliminarActionPerformed(evt);
+            }
+        });
 
-        txtPagoTotal.setEditable(false);
-        txtPagoTotal.setFont(new java.awt.Font("Segoe UI", 0, 18));
+        BtnEditar.setText("Editar Seleccionado");
+        BtnEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnEditarActionPerformed(evt);
+            }
+        });
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(34,34,34)
-                .addComponent(BtnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE,163,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(179,179,179)
-                .addComponent(txtPagoTotal, javax.swing.GroupLayout.PREFERRED_SIZE,205,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,180,Short.MAX_VALUE)
-                .addComponent(BtnPagar, javax.swing.GroupLayout.PREFERRED_SIZE,180,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(164,164,164)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE,626,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,jPanel1Layout.createSequentialGroup()
-                .addGap(410,410,410)
-                .addComponent(jLabel3)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(54,54,54)
-                .addComponent(CBProducto,javax.swing.GroupLayout.PREFERRED_SIZE,223,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(160,160,160)
-                .addComponent(SpinnerCantidad,javax.swing.GroupLayout.PREFERRED_SIZE,169,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,116,Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING,false)
-                    .addComponent(BtnAgregar,javax.swing.GroupLayout.DEFAULT_SIZE,139,Short.MAX_VALUE)
-                    .addComponent(BtnEditar,javax.swing.GroupLayout.DEFAULT_SIZE,javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE))
-                .addGap(76,76,76))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(65,65,65)
-                .addComponent(jLabel1)
-                .addGap(203,203,203)
-                .addComponent(jLabel2)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(24,24,24)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2))
-                .addGap(18,18,18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(CBProducto,javax.swing.GroupLayout.PREFERRED_SIZE,45,javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(SpinnerCantidad,javax.swing.GroupLayout.PREFERRED_SIZE,45,javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(BtnAgregar,javax.swing.GroupLayout.PREFERRED_SIZE,50,javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18,18,18)
-                        .addComponent(BtnEditar,javax.swing.GroupLayout.PREFERRED_SIZE,48,javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(29,29,29)
-                .addComponent(jScrollPane1,javax.swing.GroupLayout.PREFERRED_SIZE,197,javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(35,35,35)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(BtnCancelar,javax.swing.GroupLayout.PREFERRED_SIZE,56,javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(BtnPagar,javax.swing.GroupLayout.PREFERRED_SIZE,56,javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtPagoTotal,javax.swing.GroupLayout.PREFERRED_SIZE,49,javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(59,Short.MAX_VALUE))
-        );
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel3.setText("TOTAL:");
+
+        LblTotal.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        LblTotal.setText("S/ 0.00");
+
+        BtnConfirmarVenta.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        BtnConfirmarVenta.setText("Confirmar Venta");
+        BtnConfirmarVenta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnConfirmarVentaActionPerformed(evt);
+            }
+        });
+
+        BtnCancelar.setText("Cancelar Venta");
+        BtnCancelar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnCancelarActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1,javax.swing.GroupLayout.DEFAULT_SIZE,javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(CbxProductos, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(SpnCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(BtnAgregar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(BtnEliminar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(BtnEditar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(LblTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(BtnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(BtnConfirmarVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1,javax.swing.GroupLayout.DEFAULT_SIZE,javax.swing.GroupLayout.DEFAULT_SIZE,Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(CbxProductos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(SpnCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(BtnAgregar))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(BtnEliminar)
+                    .addComponent(BtnEditar)
+                    .addComponent(jLabel3)
+                    .addComponent(LblTotal))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(BtnConfirmarVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(BtnCancelar))
+                .addContainerGap())
         );
 
         pack();
-    }
+        setLocationRelativeTo(null);
+    }// </editor-fold>                        
 
-    private void BtnAgregarActionPerformed(java.awt.event.ActionEvent evt) {
-        int idx = CBProducto.getSelectedIndex();
-        if (idx < 0) return;
-        Producto p = productosList.get(idx);
-        int cantidad = (int) SpinnerCantidad.getValue();
-        if (cantidad > p.cantidad()) {
-            JOptionPane.showMessageDialog(this,
-                "Stock insuficiente",
-                "Error", JOptionPane.ERROR_MESSAGE);
+    private void BtnAgregarActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        agregarProductoATabla();
+    }                                          
+
+    private void agregarProductoATabla() {
+        int selectedIndex = CbxProductos.getSelectedIndex();
+        if (selectedIndex < 0) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un producto.", "Advertencia", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        double precio = p.precio();
-        double subtotal = precio * cantidad;
-        DetalleVenta d = new DetalleVenta(0, 0, p.id(), cantidad, precio);
-        detallesList.add(d);
-        model.addRow(new Object[]{p.nombre(), cantidad, precio, subtotal});
-        actualizarTotal();
-    }
+        Producto productoSeleccionado = productosList.get(selectedIndex);
+        int cantidad = (Integer) SpnCantidad.getValue();
 
-    private void BtnEditarActionPerformed(java.awt.event.ActionEvent evt) {
-        int row = jTable1.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this,
-                "Selecciona una fila",
-                "Error", JOptionPane.ERROR_MESSAGE);
+        if (cantidad <= 0) {
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser mayor que cero.", "Advertencia", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        DetalleVenta old = detallesList.get(row);
-        int cantidad = (int) SpinnerCantidad.getValue();
-        Producto p = productosList.stream()
-            .filter(prod -> prod.id() == old.idProducto())
-            .findFirst().orElseThrow();
-        if (cantidad > p.cantidad()) {
-            JOptionPane.showMessageDialog(this,
-                "Stock insuficiente",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+
+        // Verificar si el producto ya está en la tabla de detalles
+        Optional<DetalleVenta> detalleExistente = detallesVentaList.stream()
+                .filter(d -> d.getIdProducto() == productoSeleccionado.id())
+                .findFirst();
+
+        if (detalleExistente.isPresent()) {
+            // Si existe, actualizar la cantidad
+            DetalleVenta detalle = detalleExistente.get();
+            detalle.setCantidad(detalle.getCantidad() + cantidad);
+            detalle.setSubtotal(detalle.getPrecioUnitario() * detalle.getCantidad());
+        } else {
+            // Si no existe, añadir nuevo detalle
+            DetalleVenta nuevoDetalle = new DetalleVenta();
+            nuevoDetalle.setIdProducto(productoSeleccionado.id());
+            // Nombre se tomará de la tabla al renderizar, o se puede almacenar aquí
+            // Para este ejemplo, no se almacena el nombre en DetalleVenta, se toma de la tabla.
+            nuevoDetalle.setCantidad(cantidad);
+            nuevoDetalle.setPrecioUnitario(productoSeleccionado.precio());
+            nuevoDetalle.setSubtotal(productoSeleccionado.precio() * cantidad);
+            detallesVentaList.add(nuevoDetalle);
         }
-        DetalleVenta updated = new DetalleVenta(
-            old.id(), old.idVenta(), old.idProducto(),
-            cantidad, old.precioUnitario()
-        );
-        detallesList.set(row, updated);
-        model.setValueAt(cantidad, row, 1);
-        model.setValueAt(updated.precioUnitario() * cantidad, row, 3);
-        actualizarTotal();
+
+        actualizarTablaDetalles();
+        actualizarTotalGeneral();
+        SpnCantidad.setValue(1); // Resetear spinner
     }
 
-    private void BtnPagarActionPerformed(java.awt.event.ActionEvent evt) {
-        if (detallesList.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Agrega al menos un producto",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        try {
-            int ventaId = servicioVentas.generarVenta(idAdmin, detallesList);
-            JOptionPane.showMessageDialog(this,
-                "Venta registrada con ID " + ventaId,
-                "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            this.dispose();
-            new LoginFrame().setVisible(true);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                ex.getMessage(),
-                "Error al procesar venta", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {
-        this.dispose();
-        new LoginFrame().setVisible(true);
-    }
-
-    private void inicializarTabla() {
-        model.setColumnIdentifiers(new Object[]{"Producto", "Cantidad", "Precio unit.", "Subtotal"});
-        model.setRowCount(0);
-    }
-
-    private void cargarProductos() {
-        productosList = servicioInv.listarProductos();
-        CBProducto.removeAllItems();
-        for (Producto p : productosList) {
-            CBProducto.addItem(p.nombre());
-        }
-        if (!productosList.isEmpty()) {
-            CBProducto.setSelectedIndex(0);
-            CBProductoActionPerformed(null);
+    private void actualizarTablaDetalles() {
+        model.setRowCount(0); // Limpiar tabla
+        for (DetalleVenta detalle : detallesVentaList) {
+            Producto p = productosList.stream()
+                                      .filter(prod -> prod.id() == detalle.getIdProducto())
+                                      .findFirst()
+                                      .orElse(null); // Debería existir si se agregó correctamente
+            String nombreProducto = (p != null) ? p.nombre() : "Desconocido";
+            model.addRow(new Object[]{
+                detalle.getIdProducto(),
+                nombreProducto,
+                detalle.getCantidad(),
+                detalle.getPrecioUnitario(),
+                detalle.getSubtotal()
+            });
         }
     }
 
-    private void CBProductoActionPerformed(java.awt.event.ActionEvent evt) {
-        int idx = CBProducto.getSelectedIndex();
-        if (idx >= 0) {
-            int stock = productosList.get(idx).cantidad();
-            SpinnerCantidad.setModel(new SpinnerNumberModel(1, 1, stock, 1));
+    private void actualizarTotalGeneral() {
+        double total = detallesVentaList.stream().mapToDouble(DetalleVenta::getSubtotal).sum();
+        LblTotal.setText(String.format("S/ %.2f", total));
+    }
+
+    private void BtnEliminarActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        int selectedRow = tablaDetalles.getSelectedRow();
+        if (selectedRow >= 0) {
+            // Obtener el ID del producto de la fila seleccionada en la tabla
+            int idProductoEnTabla = (Integer) model.getValueAt(selectedRow, 0);
+            
+            // Eliminar el detalle de la lista detallesVentaList
+            detallesVentaList.removeIf(d -> d.getIdProducto() == idProductoEnTabla);
+            
+            actualizarTablaDetalles();
+            actualizarTotalGeneral();
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione un producto de la tabla para eliminar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
         }
-    }
+    }                                           
 
-    private void actualizarTotal() {
-        double total = detallesList.stream()
-            .mapToDouble(d -> d.precioUnitario() * d.cantidad())
-            .sum();
-        txtPagoTotal.setText(String.format("%.2f", total));
-    }
+    private void BtnEditarActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        int selectedRow = tablaDetalles.getSelectedRow();
+        if (selectedRow >= 0) {
+            int idProductoEnTabla = (Integer) model.getValueAt(selectedRow, 0);
+            int cantidadActualEnTabla = (Integer) model.getValueAt(selectedRow, 2);
 
-    public static void main(String args[]) {
-        /* Look & Feel Nimbus */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info :
-                 javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
+            DetalleVenta detalleParaEditar = detallesVentaList.stream()
+                    .filter(d -> d.getIdProducto() == idProductoEnTabla)
+                    .findFirst()
+                    .orElse(null);
+
+            if (detalleParaEditar == null) {
+                JOptionPane.showMessageDialog(this, "Error interno: Detalle no encontrado en la lista.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
-        } catch (Exception ignored) {}
-        java.awt.EventQueue.invokeLater(() -> new Venta().setVisible(true));
-    }
 
-    // Variables declaration - do not modify
+            // Encontrar el producto original para poner su nombre en el ComboBox
+            Producto productoOriginal = productosList.stream()
+                                      .filter(prod -> prod.id() == detalleParaEditar.getIdProducto())
+                                      .findFirst()
+                                      .orElse(null);
+             if (productoOriginal == null) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error interno: Producto con ID " + detalleParaEditar.getIdProducto() + " no encontrado en la lista local de productos disponibles.", 
+                    "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+
+            // Llenar el ComboBox y el Spinner con los datos del producto a editar
+            CbxProductos.setSelectedItem(productoOriginal.nombre());
+            SpnCantidad.setValue(cantidadActualEnTabla); // O usar detalleParaEditar.getCantidad()
+
+            // Eliminar el producto de la lista de detalles (se volverá a agregar con la nueva cantidad)
+            detallesVentaList.remove(detalleParaEditar);
+            actualizarTablaDetalles();
+            actualizarTotalGeneral();
+
+            // El usuario modificará la cantidad y presionará "Agregar"
+            // o seleccionará otro producto.
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleccione un producto de la tabla para editar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+        }
+    }                                         
+
+    private void BtnConfirmarVentaActionPerformed(java.awt.event.ActionEvent evt) {                                                  
+        if (detallesVentaList.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No hay productos en la venta.", "Venta Vacía", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Confirmación
+        int confirm = JOptionPane.showConfirmDialog(this, 
+                String.format("¿Confirmar la venta por un total de %s?", LblTotal.getText()), 
+                "Confirmar Venta", 
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            ServicioVentas servicioVentas = new ServicioVentas();
+            try {
+                // Asumiendo que Session.getInstance().getAdminLogueado().getId() te da el ID del admin.
+                // Si getAdminLogueado() puede ser null, manejarlo.
+                if (Session.getInstance().getAdminLogueado() == null) {
+                    JOptionPane.showMessageDialog(this, "No hay un administrador logueado. Por favor, inicie sesión.", "Error de Sesión", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                int idAdmin = Session.getInstance().getAdminLogueado().getIdAdmin();
+                
+                // Crear los objetos Venta y DetalleVenta a partir de la UI
+                // El objeto 'venta' se crea dentro de generarVenta
+                
+                String resultado = servicioVentas.generarVenta(idAdmin, new ArrayList<>(detallesVentaList)); // Pasar una copia
+                
+                JOptionPane.showMessageDialog(this, resultado, "Venta Confirmada", JOptionPane.INFORMATION_MESSAGE);
+                LOGGER.log(Level.INFO, "Venta confirmada: {0}", resultado);
+                this.dispose(); // Cerrar ventana de venta
+
+            } catch (StockInsuficienteException | ProductoNoEncontradoException | ProductoExpiradoException | ValidacionException | BaseDatosException e) {
+                LOGGER.log(Level.SEVERE, "Error al generar la venta: " + e.getMessage(), e);
+                JOptionPane.showMessageDialog(this, "Error al registrar la venta:\n" + e.getMessage(), "Error de Venta", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) { // Catch-all para errores inesperados
+                LOGGER.log(Level.SEVERE, "Error inesperado al generar la venta.", e);
+                JOptionPane.showMessageDialog(this, "Ocurrió un error inesperado: " + e.getMessage(), "Error Crítico", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }                                                 
+
+    private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {                                            
+        if (!detallesVentaList.isEmpty()) {
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                    "¿Está seguro de que desea cancelar la venta actual?\nSe perderán los detalles agregados.", 
+                    "Cancelar Venta", 
+                    JOptionPane.YES_NO_OPTION, 
+                    JOptionPane.WARNING_MESSAGE);
+            if (confirm == JOptionPane.YES_OPTION) {
+                this.dispose();
+            }
+        } else {
+            this.dispose();
+        }
+    }                                           
+
+    private void SpnCantidadKeyPressed(java.awt.event.KeyEvent evt) {                                       
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            agregarProductoATabla();
+        }
+    }                                      
+
+
+    // Variables declaration - do not modify                     
     private javax.swing.JButton BtnAgregar;
     private javax.swing.JButton BtnCancelar;
+    private javax.swing.JButton BtnConfirmarVenta;
     private javax.swing.JButton BtnEditar;
-    private javax.swing.JButton BtnPagar;
-    private javax.swing.JComboBox<String> CBProducto;
-    private javax.swing.JSpinner SpinnerCantidad;
+    private javax.swing.JButton BtnEliminar;
+    private javax.swing.JComboBox<String> CbxProductos;
+    private javax.swing.JLabel LblTotal;
+    private javax.swing.JSpinner SpnCantidad;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTextField txtPagoTotal;
-    // End of variables declaration
+    private javax.swing.JTable tablaDetalles;
+    // End of variables declaration                   
 }
