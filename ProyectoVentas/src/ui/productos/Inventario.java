@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import java.util.List;
 import java.util.Optional;
+import ui.menu.Menu_Principal;
 
 /**
  * Frame de inventario: muestra todos los productos o filtra por nombre/ID.
@@ -22,6 +23,7 @@ public class Inventario extends javax.swing.JFrame {
      */
     public Inventario() {
         initComponents();
+        BtnRegresar.addActionListener(this::BtnRegresarActionPerformed);
         // Inicializar modelo y columnas
         model = (DefaultTableModel) jTable1.getModel();
         model.setColumnIdentifiers(new Object[]{
@@ -220,6 +222,11 @@ public class Inventario extends javax.swing.JFrame {
     private void txtProductoIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtProductoIDActionPerformed
         // vacío, generado por NetBeans
     }//GEN-LAST:event_txtProductoIDActionPerformed
+
+    private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {
+        new ui.menu.Menu_Principal().setVisible(true);
+        this.dispose();
+    }
 
     /**
      * @param args the command line arguments

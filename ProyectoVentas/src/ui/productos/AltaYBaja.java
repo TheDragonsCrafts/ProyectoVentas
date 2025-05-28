@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import ui.menu.Menu_Principal;
 
 /**
  * Formulario para alta, baja y consulta de productos.
@@ -23,6 +24,7 @@ public class AltaYBaja extends javax.swing.JFrame {
 
     public AltaYBaja() {
         initComponents();
+        BtnRegresar.addActionListener(this::BtnRegresarActionPerformed);
     }
 
     @SuppressWarnings("unchecked")
@@ -421,6 +423,11 @@ public class AltaYBaja extends javax.swing.JFrame {
     private void txtPrecioActionPerformed(java.awt.event.ActionEvent evt) {}
     private void jCheckBoxEsActivoActionPerformed(java.awt.event.ActionEvent evt) {}
     // End of empty handlers
+
+    private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {
+        new ui.menu.Menu_Principal().setVisible(true);
+        this.dispose();
+    }
 
     public static void main(String args[]) {
         /* Nimbus look & feel */

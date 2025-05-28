@@ -4,6 +4,7 @@ import datos.AdministradorDatos;
 import entidades.Administrador;
 import seguridad.UtilHash;
 import ui.login.LoginFrame;
+import ui.menu.Menu_Principal;
 
 import javax.swing.JOptionPane;
 
@@ -218,7 +219,8 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnRegresarActionPerformed
-        // TODO add your handling code here:
+        new ui.menu.Menu_Principal().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_BtnRegresarActionPerformed
 
     private void txtUsuarioActionPerformed(java.awt.event.ActionEvent evt) {
