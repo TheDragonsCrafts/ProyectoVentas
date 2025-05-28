@@ -4,7 +4,6 @@ import datos.AdministradorDatos;
 import entidades.Administrador;
 import seguridad.UtilHash;
 import ui.login.LoginFrame;
-import ui.menu.Menu_Principal;
 
 import javax.swing.JOptionPane;
 
@@ -64,9 +63,8 @@ public class CrearAdminFrame extends javax.swing.JFrame {
         jCheckBoxAdminMaestro = new javax.swing.JCheckBox();
         jButtonCrearAdmin = new javax.swing.JButton();
         jButtonCancelar = new javax.swing.JButton();
-        BtnRegresar = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(51, 102, 255));
 
@@ -145,16 +143,6 @@ public class CrearAdminFrame extends javax.swing.JFrame {
             }
         });
 
-        BtnRegresar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnRegresar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
-        BtnRegresar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnRegresar.setText("Regresar");
-        BtnRegresar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                BtnRegresarActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -178,12 +166,9 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxAdminMaestro))
                     .addComponent(jLabel5)
                     .addComponent(jLabel3)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))
-                        .addGap(335, 335, 335)
-                        .addComponent(BtnRegresar, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel4)))
                 .addContainerGap(566, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -218,10 +203,8 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                 .addGap(27, 27, 27)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(BtnRegresar, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addComponent(txtCorreo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(55, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -237,11 +220,6 @@ public class CrearAdminFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnRegresarActionPerformed
-        new ui.menu.Menu_Principal().setVisible(true);
-        this.dispose();
-    }//GEN-LAST:event_BtnRegresarActionPerformed
 
     private void txtUsuarioActionPerformed(java.awt.event.ActionEvent evt) {
         jPasswordField1.requestFocus();
@@ -388,7 +366,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }
 
     private void jButtonCancelarActionPerformed(java.awt.event.ActionEvent evt) {
-        // new LoginFrame().setVisible(true); // Not needed here, handled by window listener
+        new LoginFrame().setVisible(true); 
         this.dispose();
     }
 
@@ -415,7 +393,6 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton BtnRegresar;
     private javax.swing.JButton jButtonCancelar;
     private javax.swing.JButton jButtonCrearAdmin;
     private javax.swing.JCheckBox jCheckBoxAdminMaestro;
