@@ -38,11 +38,12 @@ public class ProductoDatos {
         }
     }
 
-    /** Elimina un producto por su ID */
+    /** Cambia el estado de un producto a inactivo (activo = 0) por su ID */
     public void eliminar(int id) throws SQLException {
-        try (PreparedStatement ps = ConexionBD.obtener()
-                .prepareStatement("DELETE FROM productos WHERE id_producto=?")) {
-            ps.setInt(1, id);
+        String sql = "UPDATE productos SET activo = ? WHERE id_producto = ?";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setBoolean(1, false); // Set activo to false (0)
+            ps.setInt(2, id);
             ps.executeUpdate();
         }
     }
@@ -54,7 +55,12 @@ public class ProductoDatos {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return Optional.of(mapear(rs));
+                Producto producto = mapear(rs);
+                if (producto.activo()) {
+                    return Optional.of(producto);
+                } else {
+                    return Optional.empty(); // Producto inactivo
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -65,7 +71,7 @@ public class ProductoDatos {
     /** Busca productos cuyo nombre contenga el patrón dado */
     public List<Producto> buscarPorNombre(String patron) {
         List<Producto> lista = new ArrayList<>();
-        String sql = "SELECT * FROM productos WHERE nombre LIKE ?";
+        String sql = "SELECT * FROM productos WHERE nombre LIKE ? AND activo = true";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
             ps.setString(1, "%" + patron + "%");
             ResultSet rs = ps.executeQuery();
@@ -81,7 +87,7 @@ public class ProductoDatos {
     /** Lista **todos** los productos */
     public List<Producto> listarProductos() {
         List<Producto> lista = new ArrayList<>();
-        String sql = "SELECT * FROM productos";
+        String sql = "SELECT * FROM productos WHERE activo = true";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
