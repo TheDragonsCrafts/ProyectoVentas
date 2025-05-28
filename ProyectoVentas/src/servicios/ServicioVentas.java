@@ -3,6 +3,7 @@ package servicios;
 import datos.VentaDatos;
 import entidades.DetalleVenta;
 import entidades.Venta;
+import entidades.dto.VentaDisplayDTO;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -37,5 +38,10 @@ public class ServicioVentas {
                 detalles
         );
         return ventaDatos.registrarVenta(v);
+    }
+
+    public List<VentaDisplayDTO> consultarVentasDetalladas() throws SQLException {
+        // VentaDatos instance is already a field: private final VentaDatos ventaDatos = new VentaDatos();
+        return ventaDatos.obtenerVentasParaDisplay();
     }
 }
