@@ -5,6 +5,7 @@ import entidades.Administrador;
 import javax.swing.*;
 import seguridad.Session;
 import ui.menu.Menu_Principal;
+import datos.AdministradorDatos;
 
 public class LoginFrame extends javax.swing.JFrame {
 
@@ -13,12 +14,25 @@ public class LoginFrame extends javax.swing.JFrame {
 
     public LoginFrame() {
         initComponents();
+
+        // Check if a master admin exists to determine button visibility
+        AdministradorDatos adminDatos = new AdministradorDatos();
+        if (!adminDatos.existeAdminMaestro()) {
+            BtnCrearAdmin.setVisible(true);
+            btnIniciarSesion.setVisible(false);
+            // It's also a good idea to ensure CrearAdminFrame sets the 'Admin Maestro' checkbox
+            // if no master admin exists, but that will be handled in CrearAdminFrame.java
+        } else {
+            BtnCrearAdmin.setVisible(false);
+            btnIniciarSesion.setVisible(true);
+        }
     }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonPanel = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         UsuarioTextField = new javax.swing.JTextField();
         jPasswordField1 = new javax.swing.JPasswordField();
@@ -28,6 +42,12 @@ public class LoginFrame extends javax.swing.JFrame {
         BtnCrearAdmin = new javax.swing.JButton();
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        buttonPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
+        buttonPanel.add(BtnCrearAdmin);
+        buttonPanel.add(btnIniciarSesion);
+        // Optional: make buttonPanel transparent if its background clashes with jPanel1
+        // buttonPanel.setOpaque(false);
 
         jPanel1.setBackground(new java.awt.Color(0, 102, 255));
 
@@ -81,12 +101,6 @@ public class LoginFrame extends javax.swing.JFrame {
                     .addComponent(jPasswordField1)
                     .addComponent(UsuarioTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE))
                 .addContainerGap(316, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(236, Short.MAX_VALUE)
-                .addComponent(BtnCrearAdmin)
-                .addGap(70, 70, 70)
-                .addComponent(btnIniciarSesion)
-                .addGap(247, 247, 247))
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(413, 413, 413)
                 .addComponent(jLabel1)
@@ -95,6 +109,7 @@ public class LoginFrame extends javax.swing.JFrame {
                 .addGap(394, 394, 394)
                 .addComponent(jLabel2)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(buttonPanel, javax.swing.GroupLayout.Alignment.CENTER, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -108,9 +123,7 @@ public class LoginFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(45, 45, 45)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnIniciarSesion, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(BtnCrearAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(buttonPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(143, Short.MAX_VALUE))
         );
 
@@ -176,6 +189,7 @@ public class LoginFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton BtnCrearAdmin;
+    private javax.swing.JPanel buttonPanel;
     private javax.swing.JButton btnIniciarSesion;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
