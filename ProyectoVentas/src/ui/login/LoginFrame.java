@@ -47,7 +47,7 @@ public class LoginFrame extends javax.swing.JFrame {
         buttonPanel.add(BtnCrearAdmin);
         buttonPanel.add(btnIniciarSesion);
         // Optional: make buttonPanel transparent if its background clashes with jPanel1
-        // buttonPanel.setOpaque(false);
+buttonPanel.setOpaque(false);
 
         jPanel1.setBackground(new java.awt.Color(0, 102, 255));
 
