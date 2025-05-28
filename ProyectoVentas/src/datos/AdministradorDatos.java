@@ -76,6 +76,36 @@ public class AdministradorDatos {
         }
     }
 
+    /**
+     * Actualiza un Administrador en la base de datos.
+     * Este método actualiza todos los campos, incluyendo el hash de contraseña,
+     * utilizando el accesor admin.passwordHash() y nombres de columna consistentes
+     * con el método 'insertar'.
+     */
+    public boolean actualizar(Administrador admin) {
+        // Using column names consistent with 'insertar' and 'mapear':
+        // nombre_usuario, hash_contraseña, nombre_completo, correo_electrónico, es_admin_maestro, id_administrador
+        String sql = "UPDATE administradores SET nombre_usuario = ?, hash_contraseña = ?, nombre_completo = ?, correo_electrónico = ?, es_admin_maestro = ? WHERE id_administrador = ?";
+
+        try (Connection con = ConexionBD.obtener();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, admin.usuario());
+            ps.setString(2, admin.hash()); // Reverted to admin.hash()
+            ps.setString(3, admin.nombreCompleto());
+            ps.setString(4, admin.correo());
+            ps.setBoolean(5, admin.adminMaestro());
+            ps.setInt(6, admin.id());
+
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean eliminar(int idAdministrador) {
         String sql = "DELETE FROM administradores WHERE id_administrador = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
@@ -124,35 +154,8 @@ public class AdministradorDatos {
         return administradores;
     }
 
-    public boolean actualizar(Administrador admin) {
-        // Determine if password should be updated
-        boolean actualizarPassword = admin.hash() != null && !admin.hash().isEmpty();
-
-        StringBuilder sqlBuilder = new StringBuilder("UPDATE administradores SET nombre_usuario = ?, nombre_completo = ?, correo_electrónico = ?, es_admin_maestro = ?");
-        if (actualizarPassword) {
-            sqlBuilder.append(", hash_contraseña = ?");
-        }
-        sqlBuilder.append(" WHERE id_administrador = ?");
-
-        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sqlBuilder.toString())) {
-            ps.setString(1, admin.usuario());
-            ps.setString(2, admin.nombreCompleto());
-            ps.setString(3, admin.correo());
-            ps.setBoolean(4, admin.adminMaestro());
-
-            int paramIndex = 5;
-            if (actualizarPassword) {
-                ps.setString(paramIndex++, admin.hash());
-            }
-            ps.setInt(paramIndex, admin.id());
-
-            int affectedRows = ps.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
-            return false;
-        }
-    }
+    // The original 'actualizar' method with conditional password update has been removed
+    // as per the decision to have a single 'actualizar' method that aligns with the subtask's requirements.
 
     public boolean actualizarEstadoActivo(int idAdministrador, boolean nuevoEstado) {
         String sql = "UPDATE administradores SET activo = ? WHERE id_administrador = ?";

@@ -300,14 +300,15 @@ public class Historial_Ventas extends javax.swing.JFrame {
             List<VentaDisplayDTO> ventasActuales;
             // Check if filters are active to fetch a potentially smaller list
             String nombreVendedor = txtAdminVendedor.getText().trim();
-            String fechaInicioStr = txtinicioFecha.getText().trim();
-            String fechaFinStr = txtTerminoFecha.getText().trim();
-            DateTimeFormatter parserDtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate fechaInicio = null;
-            LocalDate fechaFin = null;
+            // String fechaInicioStr = txtinicioFecha.getText().trim(); // Replaced
+            // String fechaFinStr = txtTerminoFecha.getText().trim(); // Replaced
+            // DateTimeFormatter parserDtf = DateTimeFormatter.ofPattern("dd/MM/yyyy"); // No longer needed here
 
-            if (!fechaInicioStr.isEmpty()) fechaInicio = LocalDate.parse(fechaInicioStr, parserDtf);
-            if (!fechaFinStr.isEmpty()) fechaFin = LocalDate.parse(fechaFinStr, parserDtf);
+            Date utilFechaInicio = jdcInicioFecha.getDate();
+            Date utilFechaFin = jdcTerminoFecha.getDate();
+
+            LocalDate fechaInicio = (utilFechaInicio != null) ? utilFechaInicio.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+            LocalDate fechaFin = (utilFechaFin != null) ? utilFechaFin.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
             
             // Fetch with current filters
             ventasActuales = servicioVentas.consultarVentasDetalladas(nombreVendedor, fechaInicio, fechaFin);
