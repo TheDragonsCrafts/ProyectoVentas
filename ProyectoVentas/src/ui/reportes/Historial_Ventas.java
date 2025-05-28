@@ -4,6 +4,7 @@
  */
 package ui.reportes;
 
+import ui.menu.Menu_Principal;
 
 /**
  *
@@ -16,6 +17,7 @@ public class Historial_Ventas extends javax.swing.JFrame {
      */
     public Historial_Ventas() {
         initComponents();
+        BtnRegresar.addActionListener(this::BtnRegresarActionPerformed);
     }
 
     /**
@@ -234,6 +236,11 @@ public class Historial_Ventas extends javax.swing.JFrame {
     private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCancelarActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_BtnCancelarActionPerformed
+
+    private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {
+        new ui.menu.Menu_Principal().setVisible(true);
+        this.dispose();
+    }
 
     /**
      * @param args the command line arguments

@@ -4,6 +4,8 @@
  */
 package ui.admin;
 
+import ui.menu.Menu_Principal;
+
 /**
  *
  * @author Liliana
@@ -224,7 +226,8 @@ public class Gestion_Administradores extends javax.swing.JFrame {
     }//GEN-LAST:event_BtnActivarDesactivarAdminActionPerformed
 
     private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnRegresarActionPerformed
-        // TODO add your handling code here:
+        new ui.menu.Menu_Principal().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_BtnRegresarActionPerformed
 
     /**
