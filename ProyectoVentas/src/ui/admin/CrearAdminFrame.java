@@ -24,6 +24,20 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     public CrearAdminFrame() {
         initComponents();
         setLocationRelativeTo(null);
+
+        // Logic to handle 'Admin Maestro' checkbox based on existing master admin
+        // This code should be in the constructor CrearAdminFrame()
+        // It seems 'datos' is already a field: private final AdministradorDatos datos = new AdministradorDatos();
+        // So we can use that.
+        if (!this.datos.existeAdminMaestro()) {
+            jCheckBoxAdminMaestro.setSelected(true);
+            jCheckBoxAdminMaestro.setEnabled(false);
+        } else {
+            // Optional: Ensure it's not selected and is enabled if a master admin already exists
+            // and this frame is somehow opened directly (though current logic in LoginFrame should prevent this specific scenario for initial creation)
+            jCheckBoxAdminMaestro.setSelected(false);
+            jCheckBoxAdminMaestro.setEnabled(true);
+        }
     }
 
     public CrearAdminFrame(Administrador admin) {

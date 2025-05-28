@@ -1,5 +1,8 @@
 package ui.menu;
 
+import datos.AdministradorDatos;
+import entidades.Administrador; // Ensure this is imported
+import java.util.Optional;     // Required for handling the result of buscarPorId
 import seguridad.Session;
 import ui.login.LoginFrame;
 import ui.productos.AltaYBaja;
@@ -23,6 +26,17 @@ public class Menu_Principal extends javax.swing.JFrame {
         initComponents();
         // Centro la ventana
         setLocationRelativeTo(null);
+
+        // Determine if the current user is a master admin to enable/disable user management button
+        AdministradorDatos adminDatos = new AdministradorDatos();
+        int currentAdminId = Session.getIdAdmin();
+        Optional<Administrador> currentAdminOpt = adminDatos.buscarPorId(currentAdminId);
+
+        if (currentAdminOpt.isPresent() && currentAdminOpt.get().adminMaestro()) {
+            BtnAdministrarUsuariosAdmins.setEnabled(true);
+        } else {
+            BtnAdministrarUsuariosAdmins.setEnabled(false);
+        }
     }
 
     @SuppressWarnings("unchecked")
