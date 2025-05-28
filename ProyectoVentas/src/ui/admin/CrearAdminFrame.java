@@ -46,7 +46,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
         jButtonCancelar = new javax.swing.JButton();
         BtnRegresar = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(51, 102, 255));
 
@@ -293,7 +293,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                 "Administrador creado con éxito",
                 "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
-            new LoginFrame().setVisible(true);
+            // new LoginFrame().setVisible(true); // Not needed here, handled by window listener
             this.dispose();
 
         } catch (Exception ex) {
@@ -305,7 +305,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }
 
     private void jButtonCancelarActionPerformed(java.awt.event.ActionEvent evt) {
-        new LoginFrame().setVisible(true);
+        // new LoginFrame().setVisible(true); // Not needed here, handled by window listener
         this.dispose();
     }
 

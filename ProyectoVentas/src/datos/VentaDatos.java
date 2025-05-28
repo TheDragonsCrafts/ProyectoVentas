@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 
@@ -64,21 +65,24 @@ public class VentaDatos {
             throw e;
         } finally {
             cx.setAutoCommit(true);
+            // Consider returning cx to pool if applicable, for now, just ensuring autoCommit is reset.
         }
     }
 
-    public List<VentaDisplayDTO> obtenerVentasParaDisplay() throws SQLException {
+    public List<VentaDisplayDTO> obtenerVentasParaDisplay(String nombreVendedor, LocalDate fechaInicio, LocalDate fechaFin) throws SQLException {
         List<VentaDisplayDTO> ventasDisplay = new ArrayList<>();
         Map<Integer, List<DetalleVentaDisplayDTO>> detallesPorVentaId = new HashMap<>();
+        List<Object> params = new ArrayList<>();
 
+        // Primero, obtener todos los detalles de venta.
+        // Esto es ineficiente si hay muchas ventas y solo se filtran algunas,
+        // pero simplifica la lógica ya que los detalles no se filtran directamente por fecha o vendedor.
+        // Una optimización sería filtrar las ventas primero y luego obtener detalles solo para esas ventas.
         String sqlDetalles = "SELECT dv.id_venta, p.nombre AS nombre_producto, dv.cantidad, dv.precio_en_venta " +
                              "FROM detalles_venta dv " +
                              "JOIN productos p ON dv.id_producto = p.id_producto";
-                             // Fetches all details. Assumes products referenced in detalles_venta exist.
-                             // Consider adding "WHERE dv.id_producto IS NOT NULL" if products can be deleted 
-                             // and id_producto in detalles_venta can become NULL and you want to exclude those.
 
-        Connection cx = null; // Declare outside try to be accessible in finally
+        Connection cx = null;
         try {
             cx = ConexionBD.obtener();
             try (Statement stmtDetalles = cx.createStatement();
@@ -88,42 +92,60 @@ public class VentaDatos {
                     String nombreProducto = rsDetalles.getString("nombre_producto");
                     int cantidad = rsDetalles.getInt("cantidad");
                     double precioEnVenta = rsDetalles.getDouble("precio_en_venta");
-
                     DetalleVentaDisplayDTO detalleDto = new DetalleVentaDisplayDTO(nombreProducto, cantidad, precioEnVenta);
                     detallesPorVentaId.computeIfAbsent(idVenta, k -> new ArrayList<>()).add(detalleDto);
                 }
-            } // stmtDetalles and rsDetalles are closed here
+            }
 
-            String sqlVentas = "SELECT v.id_venta, v.fecha_venta, v.monto_total, v.estado, a.nombre_completo AS nombre_administrador " +
-                               "FROM ventas v " +
-                               "JOIN administradores a ON v.id_administrador = a.id_administrador " +
-                               "ORDER BY v.fecha_venta DESC";
+            // Construir la consulta de ventas dinámicamente
+            StringBuilder sqlVentasBuilder = new StringBuilder(
+                "SELECT v.id_venta, v.fecha_venta, v.monto_total, v.estado, a.nombre_completo AS nombre_administrador " +
+                "FROM ventas v " +
+                "JOIN administradores a ON v.id_administrador = a.id_administrador"
+            );
 
-            try (Statement stmtVentas = cx.createStatement();
-                 ResultSet rsVentas = stmtVentas.executeQuery(sqlVentas)) {
-                while (rsVentas.next()) {
-                    int idVenta = rsVentas.getInt("id_venta");
-                    java.sql.Timestamp fechaVentaTimestamp = rsVentas.getTimestamp("fecha_venta");
-                    LocalDateTime fechaVenta = (fechaVentaTimestamp != null) ? fechaVentaTimestamp.toLocalDateTime() : null;
-                    double montoTotal = rsVentas.getDouble("monto_total");
-                    String estado = rsVentas.getString("estado");
-                    String nombreAdministrador = rsVentas.getString("nombre_administrador");
+            List<String> conditions = new ArrayList<>();
+            if (nombreVendedor != null && !nombreVendedor.trim().isEmpty()) {
+                conditions.add("a.nombre_completo LIKE ?");
+                params.add("%" + nombreVendedor.trim() + "%");
+            }
+            if (fechaInicio != null) {
+                conditions.add("DATE(v.fecha_venta) >= ?");
+                params.add(Date.valueOf(fechaInicio));
+            }
+            if (fechaFin != null) {
+                conditions.add("DATE(v.fecha_venta) <= ?");
+                params.add(Date.valueOf(fechaFin));
+            }
 
-                    List<DetalleVentaDisplayDTO> detalles = detallesPorVentaId.getOrDefault(idVenta, new ArrayList<>());
+            if (!conditions.isEmpty()) {
+                sqlVentasBuilder.append(" WHERE ");
+                sqlVentasBuilder.append(String.join(" AND ", conditions));
+            }
+            sqlVentasBuilder.append(" ORDER BY v.fecha_venta DESC");
 
-                    ventasDisplay.add(new VentaDisplayDTO(idVenta, fechaVenta, montoTotal, nombreAdministrador, detalles, estado));
+            try (PreparedStatement psVentas = cx.prepareStatement(sqlVentasBuilder.toString())) {
+                for (int i = 0; i < params.size(); i++) {
+                    psVentas.setObject(i + 1, params.get(i));
                 }
-            } // stmtVentas and rsVentas are closed here
 
+                try (ResultSet rsVentas = psVentas.executeQuery()) {
+                    while (rsVentas.next()) {
+                        int idVenta = rsVentas.getInt("id_venta");
+                        java.sql.Timestamp fechaVentaTimestamp = rsVentas.getTimestamp("fecha_venta");
+                        LocalDateTime fechaVenta = (fechaVentaTimestamp != null) ? fechaVentaTimestamp.toLocalDateTime() : null;
+                        double montoTotal = rsVentas.getDouble("monto_total");
+                        String estado = rsVentas.getString("estado");
+                        String nombreAdministrador = rsVentas.getString("nombre_administrador");
+                        List<DetalleVentaDisplayDTO> detalles = detallesPorVentaId.getOrDefault(idVenta, new ArrayList<>());
+                        ventasDisplay.add(new VentaDisplayDTO(idVenta, fechaVenta, montoTotal, nombreAdministrador, detalles, estado));
+                    }
+                }
+            }
         } finally {
             if (cx != null) {
-                // Only call setAutoCommit if you changed it.
-                // If ConexionBD.obtener() gives connections from a pool that might be in autoCommit(false)
-                // by default for other operations, then it's safer to ensure it here.
-                // However, for read operations like this, it's usually not changed.
-                // For now, let's assume default autoCommit(true) is fine.
-                // cx.setAutoCommit(true); // Optional, depending on connection pool and other uses
-                cx.close(); // Return connection to the pool or close it
+                // cx.setAutoCommit(true); // Assuming default is true and was not changed for read.
+                cx.close();
             }
         }
         return ventasDisplay;

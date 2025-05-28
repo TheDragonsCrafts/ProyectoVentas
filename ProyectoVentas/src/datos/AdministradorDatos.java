@@ -4,6 +4,8 @@ import entidades.Administrador;
 import seguridad.ConexionBD;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class AdministradorDatos {
@@ -20,6 +22,19 @@ public class AdministradorDatos {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Administrador> buscarPorId(int idAdmin) {
+        String sql = "SELECT * FROM administradores WHERE id_administrador = ?";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setInt(1, idAdmin);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return Optional.of(mapear(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
         }
         return Optional.empty();
     }
@@ -58,6 +73,98 @@ public class AdministradorDatos {
             ps.setBoolean(5, a.activo());
             ps.setBoolean(6, a.adminMaestro());
             ps.executeUpdate();
+        }
+    }
+
+    public boolean eliminar(int idAdministrador) {
+        String sql = "DELETE FROM administradores WHERE id_administrador = ?";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setInt(1, idAdministrador);
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
+            // Check for foreign key constraint violation if needed, though for admins it might be less common
+            // if (e.getSQLState().equals("23000")) { /* foreign key violation */ }
+            return false;
+        }
+    }
+
+    public List<Administrador> listarTodos() {
+        List<Administrador> administradores = new ArrayList<>();
+        String sql = "SELECT * FROM administradores";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                administradores.add(mapear(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Consider logging the exception or throwing a custom exception
+        }
+        return administradores;
+    }
+
+    public List<Administrador> buscarPorTermino(String termino) {
+        List<Administrador> administradores = new ArrayList<>();
+        String sql = "SELECT * FROM administradores WHERE nombre_usuario LIKE ? OR nombre_completo LIKE ?";
+        String searchTerm = "%" + termino + "%";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setString(1, searchTerm);
+            ps.setString(2, searchTerm);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    administradores.add(mapear(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Consider logging the exception or throwing a custom exception
+        }
+        return administradores;
+    }
+
+    public boolean actualizar(Administrador admin) {
+        // Determine if password should be updated
+        boolean actualizarPassword = admin.hash() != null && !admin.hash().isEmpty();
+
+        StringBuilder sqlBuilder = new StringBuilder("UPDATE administradores SET nombre_usuario = ?, nombre_completo = ?, correo_electrónico = ?, es_admin_maestro = ?");
+        if (actualizarPassword) {
+            sqlBuilder.append(", hash_contraseña = ?");
+        }
+        sqlBuilder.append(" WHERE id_administrador = ?");
+
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sqlBuilder.toString())) {
+            ps.setString(1, admin.usuario());
+            ps.setString(2, admin.nombreCompleto());
+            ps.setString(3, admin.correo());
+            ps.setBoolean(4, admin.adminMaestro());
+
+            int paramIndex = 5;
+            if (actualizarPassword) {
+                ps.setString(paramIndex++, admin.hash());
+            }
+            ps.setInt(paramIndex, admin.id());
+
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
+            return false;
+        }
+    }
+
+    public boolean actualizarEstadoActivo(int idAdministrador, boolean nuevoEstado) {
+        String sql = "UPDATE administradores SET activo = ? WHERE id_administrador = ?";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+            ps.setBoolean(1, nuevoEstado);
+            ps.setInt(2, idAdministrador);
+            int affectedRows = ps.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Consider logging the exception
+            return false;
         }
     }
 
