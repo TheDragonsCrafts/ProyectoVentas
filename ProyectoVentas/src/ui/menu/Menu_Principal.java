@@ -5,6 +5,8 @@ import ui.login.LoginFrame;
 import ui.productos.AltaYBaja;
 import ui.ventas.Venta;
 import ui.productos.Inventario;
+import ui.admin.Gestion_Administradores;
+import ui.reportes.Historial_Ventas;
 
 /**
  * Menu principal de la aplicación.
@@ -55,6 +57,11 @@ public class Menu_Principal extends javax.swing.JFrame {
         BtnAdministrarUsuariosAdmins.setBackground(new java.awt.Color(0, 0, 0));
         BtnAdministrarUsuariosAdmins.setForeground(new java.awt.Color(255, 255, 255));
         BtnAdministrarUsuariosAdmins.setText("Administrar Usuarios");
+        BtnAdministrarUsuariosAdmins.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnAdministrarUsuariosAdminsActionPerformed(evt);
+            }
+        });
 
         BtnAltaYBaja.setBackground(new java.awt.Color(0, 0, 0));
         BtnAltaYBaja.setForeground(new java.awt.Color(255, 255, 255));
@@ -77,6 +84,11 @@ public class Menu_Principal extends javax.swing.JFrame {
         BtnHistorial.setBackground(new java.awt.Color(0, 0, 0));
         BtnHistorial.setForeground(new java.awt.Color(255, 255, 255));
         BtnHistorial.setText("Historial de Ventas");
+        BtnHistorial.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnHistorialActionPerformed(evt);
+            }
+        });
 
         BtnInventario.setBackground(new java.awt.Color(0, 0, 0));
         BtnInventario.setForeground(new java.awt.Color(255, 255, 255));
@@ -174,6 +186,15 @@ public class Menu_Principal extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_BtnAltaYBajaActionPerformed
 
+    private void BtnAdministrarUsuariosAdminsActionPerformed(java.awt.event.ActionEvent evt) {
+        new Gestion_Administradores().setVisible(true);
+        this.dispose();
+    }
+
+    private void BtnHistorialActionPerformed(java.awt.event.ActionEvent evt) {
+        new Historial_Ventas().setVisible(true);
+        this.dispose();
+    }
 
     /**
      * @param args the command line arguments
