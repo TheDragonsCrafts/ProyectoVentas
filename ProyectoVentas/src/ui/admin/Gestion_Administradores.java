@@ -4,7 +4,16 @@
  */
 package ui.admin;
 
+import datos.AdministradorDatos;
+import entidades.Administrador;
 import ui.menu.Menu_Principal;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  *
@@ -17,6 +26,36 @@ public class Gestion_Administradores extends javax.swing.JFrame {
      */
     public Gestion_Administradores() {
         initComponents();
+        cargarAdministradores();
+    }
+
+    private void actualizarTabla(List<Administrador> administradores) {
+        String[] columnNames = {"ID", "Usuario", "Nombre Completo", "Correo", "Activo", "Rol"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        for (Administrador admin : administradores) {
+            Object[] row = new Object[]{
+                    admin.id(),
+                    admin.usuario(),
+                    admin.nombreCompleto(),
+                    admin.correo(),
+                    admin.activo() ? "Sí" : "No",
+                    admin.adminMaestro() ? "Maestro" : "Estándar"
+            };
+            model.addRow(row);
+        }
+        jTable1.setModel(model);
+    }
+
+    private void cargarAdministradores() {
+        AdministradorDatos adminDatos = new AdministradorDatos();
+        try {
+            List<Administrador> administradores = adminDatos.listarTodos();
+            actualizarTabla(administradores);
+        } catch (Exception e) { // Catching generic Exception, consider SQLException if only that is expected
+            JOptionPane.showMessageDialog(this, "Error al cargar administradores: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
     }
 
     /**
@@ -206,23 +245,141 @@ public class Gestion_Administradores extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void BtnEliminarAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnEliminarAdminActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un administrador para eliminar.", "Ningún administrador seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int adminId = (int) jTable1.getValueAt(selectedRow, 0);
+            String nombreUsuario = (String) jTable1.getValueAt(selectedRow, 1);
+
+            String mensajeConfirmacion = String.format("¿Está seguro de que desea eliminar al administrador '%s'? Esta acción no se puede deshacer.", nombreUsuario);
+            int confirmacion = JOptionPane.showConfirmDialog(this, mensajeConfirmacion, "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                // Prevent deletion of the admin itself if it's the only one or only master admin (optional safety check)
+                // For example, check if this admin is the last admin_maestro or last admin overall.
+                // This logic can be complex and depends on specific business rules.
+                // For now, proceeding with direct deletion as per task.
+
+                AdministradorDatos adminDatos = new AdministradorDatos();
+                boolean exito = adminDatos.eliminar(adminId);
+
+                if (exito) {
+                    JOptionPane.showMessageDialog(this, "Administrador '" + nombreUsuario + "' eliminado correctamente.", "Eliminación Exitosa", JOptionPane.INFORMATION_MESSAGE);
+                    cargarAdministradores(); // Refresh table
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al eliminar el administrador. Verifique si tiene dependencias o consulte los logs.", "Error de Eliminación", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al procesar la solicitud de eliminación: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
     }//GEN-LAST:event_BtnEliminarAdminActionPerformed
 
     private void BtnBuscarAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnBuscarAdminActionPerformed
-        // TODO add your handling code here:
+        String termino = txtBuscar.getText().trim();
+        AdministradorDatos adminDatos = new AdministradorDatos();
+
+        try {
+            if (termino.isEmpty()) {
+                cargarAdministradores(); // Reload all if search term is empty
+            } else {
+                List<Administrador> administradores = adminDatos.buscarPorTermino(termino);
+                actualizarTabla(administradores);
+                if (administradores.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "No se encontraron administradores que coincidan con: '" + termino + "'", "Búsqueda sin resultados", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al buscar administradores: " + e.getMessage(), "Error de Búsqueda", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
     }//GEN-LAST:event_BtnBuscarAdminActionPerformed
 
     private void BtnEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnEditarActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un administrador de la tabla para editar.", "Ningún administrador seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int adminId = (int) jTable1.getValueAt(selectedRow, 0);
+            AdministradorDatos adminDatos = new AdministradorDatos();
+            java.util.Optional<Administrador> adminOpt = adminDatos.buscarPorId(adminId);
+
+            if (adminOpt.isPresent()) {
+                Administrador adminParaEditar = adminOpt.get();
+                CrearAdminFrame editarFrame = new CrearAdminFrame(adminParaEditar);
+
+                editarFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        cargarAdministradores(); // Refresh table after edit frame is closed
+                    }
+                });
+                editarFrame.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "El administrador seleccionado no fue encontrado. Puede haber sido eliminado.", "Administrador no encontrado", JOptionPane.ERROR_MESSAGE);
+                cargarAdministradores(); // Refresh table as a precaution
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al intentar editar el administrador: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
     }//GEN-LAST:event_BtnEditarActionPerformed
 
     private void BtnNuevoAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnNuevoAdminActionPerformed
-        // TODO add your handling code here:
+        CrearAdminFrame crearAdminFrame = new CrearAdminFrame();
+        crearAdminFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                cargarAdministradores();
+            }
+        });
+        crearAdminFrame.setVisible(true);
     }//GEN-LAST:event_BtnNuevoAdminActionPerformed
 
     private void BtnActivarDesactivarAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnActivarDesactivarAdminActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = jTable1.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un administrador de la tabla.", "Ningún administrador seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int adminId = (int) jTable1.getValueAt(selectedRow, 0);
+            String nombreUsuario = (String) jTable1.getValueAt(selectedRow, 1); // For confirmation dialog
+            String estadoActualStr = (String) jTable1.getValueAt(selectedRow, 4);
+            boolean estadoActual = estadoActualStr.equals("Sí");
+            boolean nuevoEstado = !estadoActual;
+            String nuevoEstadoStr = nuevoEstado ? "Activo" : "Inactivo";
+
+            String mensajeConfirmacion = String.format("¿Desea cambiar el estado de '%s' a '%s'?", nombreUsuario, nuevoEstadoStr);
+            int confirmacion = JOptionPane.showConfirmDialog(this, mensajeConfirmacion, "Confirmar Cambio de Estado", JOptionPane.YES_NO_OPTION);
+
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                AdministradorDatos adminDatos = new AdministradorDatos();
+                boolean exito = adminDatos.actualizarEstadoActivo(adminId, nuevoEstado);
+
+                if (exito) {
+                    JOptionPane.showMessageDialog(this, "Estado del administrador actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    cargarAdministradores(); // Refresh table
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error al actualizar el estado del administrador.", "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al procesar la solicitud: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
     }//GEN-LAST:event_BtnActivarDesactivarAdminActionPerformed
 
     private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnRegresarActionPerformed

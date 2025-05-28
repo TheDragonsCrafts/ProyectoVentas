@@ -4,7 +4,20 @@
  */
 package ui.reportes;
 
+import entidades.dto.VentaDisplayDTO;
+import servicios.ServicioVentas;
 import ui.menu.Menu_Principal;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Date; // For JDateChooser
+import java.util.List;
+import com.toedter.calendar.JDateChooser; // Added JDateChooser
 
 /**
  *
@@ -12,13 +25,54 @@ import ui.menu.Menu_Principal;
  */
 public class Historial_Ventas extends javax.swing.JFrame {
 
+    private final ServicioVentas servicioVentas = new ServicioVentas();
+    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private JDateChooser jdcInicioFecha; // Replaces txtinicioFecha
+    private JDateChooser jdcTerminoFecha; // Replaces txtTerminoFecha
+
+
     /**
      * Creates new form Historial_Ventas
      */
     public Historial_Ventas() {
-        initComponents();
+        initComponents(); // This will be modified to use JDateChoosers
         BtnRegresar.addActionListener(this::BtnRegresarActionPerformed);
+        cargarVentasPredeterminadas();
     }
+
+    private void actualizarTablaVentas(List<VentaDisplayDTO> ventas) {
+        String[] columnNames = {"ID Venta", "Fecha/Hora", "Monto Total", "Vendedor", "Estado"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+        if (ventas != null) { // Add null check for safety
+            for (VentaDisplayDTO venta : ventas) {
+                String fechaFormateada = venta.fechaVenta() != null ? venta.fechaVenta().format(DTF) : "N/A";
+                Object[] row = {
+                        venta.idVenta(),
+                        fechaFormateada,
+                        venta.montoTotal(),
+                        venta.nombreAdministrador(),
+                        venta.estado()
+                };
+                model.addRow(row);
+            }
+        }
+        jTable1.setModel(model);
+    }
+
+    private void cargarVentasPredeterminadas() {
+        try {
+            List<VentaDisplayDTO> ventas = servicioVentas.consultarVentasDetalladas(); // Fetches all sales
+            actualizarTablaVentas(ventas);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar el historial de ventas: " + e.getMessage(), "Error de Carga", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error inesperado: " + e.getMessage(), "Error Inesperado", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace(); // For developer logging
+        }
+    }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -30,8 +84,12 @@ public class Historial_Ventas extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        txtinicioFecha = new javax.swing.JTextField();
-        txtTerminoFecha = new javax.swing.JTextField();
+        // txtinicioFecha = new javax.swing.JTextField(); // Replaced
+        // txtTerminoFecha = new javax.swing.JTextField(); // Replaced
+        jdcInicioFecha = new JDateChooser();
+        jdcTerminoFecha = new JDateChooser();
+        jdcInicioFecha.setDateFormatString("dd/MM/yyyy"); // Set date format
+        jdcTerminoFecha.setDateFormatString("dd/MM/yyyy"); // Set date format
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
@@ -47,17 +105,8 @@ public class Historial_Ventas extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(0, 102, 255));
 
-        txtinicioFecha.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtinicioFechaActionPerformed(evt);
-            }
-        });
-
-        txtTerminoFecha.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtTerminoFechaActionPerformed(evt);
-            }
-        });
+        // txtinicioFecha.addActionListener(...) // No equivalent needed for JDateChooser usually
+        // txtTerminoFecha.addActionListener(...) // No equivalent needed for JDateChooser usually
 
         jLabel1.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
         jLabel1.setText("Fecha inicio");
@@ -92,7 +141,7 @@ public class Historial_Ventas extends javax.swing.JFrame {
                 {null, null, null, null}
             },
             new String [] {
-                "ID venta", "Fecha/Hora", "Monto Total", "Vendedor"
+                "ID Venta", "Fecha/Hora", "Monto Total", "Vendedor", "Estado"
             }
         ));
         jScrollPane1.setViewportView(jTable1);
@@ -137,13 +186,15 @@ public class Historial_Ventas extends javax.swing.JFrame {
                             .addComponent(jLabel3))
                         .addGap(125, 125, 125)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtinicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            // .addComponent(txtinicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE) // Replaced
+                            .addComponent(jdcInicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel1))
                         .addGap(27, 27, 27)
                         .addComponent(jLabel2))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(610, 610, 610)
-                        .addComponent(txtTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        // .addComponent(txtTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE))) // Replaced
+                        .addComponent(jdcTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(123, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGap(51, 51, 51)
@@ -174,12 +225,14 @@ public class Historial_Ventas extends javax.swing.JFrame {
                             .addComponent(jLabel1)
                             .addComponent(jLabel2))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING) // Use LEADING for JDateChooser vertical alignment
                             .addComponent(txtAdminVendedor, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtinicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            // .addComponent(txtinicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))) // Replaced
+                            .addComponent(jdcInicioFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(txtTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        // .addComponent(txtTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))) // Replaced
+                        .addComponent(jdcTerminoFecha, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(20, 20, 20)
@@ -218,15 +271,115 @@ public class Historial_Ventas extends javax.swing.JFrame {
     }//GEN-LAST:event_txtTerminoFechaActionPerformed
 
     private void BtnDetallesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnDetallesActionPerformed
-        // TODO add your handling code here:
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione una venta de la tabla para ver sus detalles.", "Ninguna Venta Seleccionada", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            // It's safer to get the ID and re-fetch or find the DTO from a reliable source
+            // than to pass around DTOs directly from the table model if they could be stale.
+            // However, for simplicity, if the table model holds up-to-date DTOs (or enough info),
+            // we can try to retrieve it. Here, we get the ID.
+            int idVenta = (int) jTable1.getValueAt(selectedRow, 0);
+
+            // Fetch the list of DTOs currently displayed or re-fetch if necessary.
+            // For this example, let's assume the serviceVentas can give us the specific DTO
+            // or we iterate through the currently loaded list.
+            // A more robust way would be:
+            // VentaDisplayDTO ventaSeleccionada = servicioVentas.consultarVentaPorId(idVenta);
+            // But since that method doesn't exist, we'll search in the list currently populating the table.
+            // This requires storing the list or re-fetching based on current filters.
+
+            // Simplest approach: re-fetch based on current filters displayed in table.
+            // This is not ideal for performance if the list is very large.
+            // A better way: store the List<VentaDisplayDTO> that populates the table as a field.
+            // For now, let's re-fetch all and find by ID. This is less efficient but works.
+            
+            List<VentaDisplayDTO> ventasActuales;
+            // Check if filters are active to fetch a potentially smaller list
+            String nombreVendedor = txtAdminVendedor.getText().trim();
+            // String fechaInicioStr = txtinicioFecha.getText().trim(); // Replaced
+            // String fechaFinStr = txtTerminoFecha.getText().trim(); // Replaced
+            // DateTimeFormatter parserDtf = DateTimeFormatter.ofPattern("dd/MM/yyyy"); // No longer needed here
+
+            Date utilFechaInicio = jdcInicioFecha.getDate();
+            Date utilFechaFin = jdcTerminoFecha.getDate();
+
+            LocalDate fechaInicio = (utilFechaInicio != null) ? utilFechaInicio.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+            LocalDate fechaFin = (utilFechaFin != null) ? utilFechaFin.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+            
+            // Fetch with current filters
+            ventasActuales = servicioVentas.consultarVentasDetalladas(nombreVendedor, fechaInicio, fechaFin);
+            
+            VentaDisplayDTO ventaSeleccionada = null;
+            for (VentaDisplayDTO venta : ventasActuales) {
+                if (venta.idVenta() == idVenta) {
+                    ventaSeleccionada = venta;
+                    break;
+                }
+            }
+
+            if (ventaSeleccionada != null) {
+                DetalleVentaFrame detalleFrame = new DetalleVentaFrame(ventaSeleccionada);
+                detalleFrame.setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "No se pudo encontrar la venta seleccionada. La tabla podría haberse actualizado.", "Venta no encontrada", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (DateTimeParseException e) {
+            // This might happen if dates in filter fields become invalid between search and details click
+            JOptionPane.showMessageDialog(this, "Error en el formato de fecha de los filtros al intentar recargar detalles: " + e.getMessage(), "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } 
+        catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar detalles de la venta: " + e.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error inesperado al mostrar los detalles: " + e.getMessage(), "Error Inesperado", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_BtnDetallesActionPerformed
 
     private void BtnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnBuscarActionPerformed
-        // TODO add your handling code here:
+        String nombreVendedor = txtAdminVendedor.getText().trim();
+        // String fechaInicioStr = txtinicioFecha.getText().trim(); // Replaced
+        // String fechaFinStr = txtTerminoFecha.getText().trim(); // Replaced
+
+        Date utilFechaInicio = jdcInicioFecha.getDate();
+        Date utilFechaFin = jdcTerminoFecha.getDate();
+
+        LocalDate fechaInicio = (utilFechaInicio != null) ? utilFechaInicio.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+        LocalDate fechaFin = (utilFechaFin != null) ? utilFechaFin.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+
+        // DateTimeParseException handling is no longer needed for these fields
+
+        if (fechaInicio != null && fechaFin != null && fechaInicio.isAfter(fechaFin)) {
+            JOptionPane.showMessageDialog(this, "La fecha de inicio no puede ser posterior a la fecha de fin.", "Error de Rango de Fechas", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // Use the modified service method that accepts filter parameters
+            List<VentaDisplayDTO> ventasFiltradas = servicioVentas.consultarVentasDetalladas(nombreVendedor, fechaInicio, fechaFin);
+            actualizarTablaVentas(ventasFiltradas);
+
+            if (ventasFiltradas.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No se encontraron ventas que coincidan con los criterios de búsqueda.", "Búsqueda sin resultados", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al buscar ventas en la base de datos: " + e.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error inesperado al buscar ventas: " + e.getMessage(), "Error Inesperado", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_BtnBuscarActionPerformed
 
     private void txtinicioFechaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtinicioFechaActionPerformed
-        // TODO add your handling code here:
+        // This method is now orphaned as txtinicioFecha is removed.
+        // It can be deleted or left as is (it won't be called).
     }//GEN-LAST:event_txtinicioFechaActionPerformed
 
     private void txtAdminVendedorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtAdminVendedorActionPerformed
@@ -234,7 +387,19 @@ public class Historial_Ventas extends javax.swing.JFrame {
     }//GEN-LAST:event_txtAdminVendedorActionPerformed
 
     private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCancelarActionPerformed
-        // TODO add your handling code here:
+        txtAdminVendedor.setText("");
+        // txtinicioFecha.setText(""); // Replaced
+        // txtTerminoFecha.setText(""); // Replaced
+        jdcInicioFecha.setDate(null);
+        jdcTerminoFecha.setDate(null);
+        try {
+            cargarVentasPredeterminadas(); // This method already updates the table and handles its own errors
+            JOptionPane.showMessageDialog(this, "Filtros limpiados. Mostrando todas las ventas.", "Filtros Limpiados", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            // This catch block is a fallback, as cargarVentasPredeterminadas should handle its own SQLExceptions/Exceptions.
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al intentar limpiar los filtros y recargar las ventas: " + e.getMessage(), "Error Inesperado", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_BtnCancelarActionPerformed
 
     private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {
@@ -292,7 +457,8 @@ public class Historial_Ventas extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField txtAdminVendedor;
-    private javax.swing.JTextField txtTerminoFecha;
-    private javax.swing.JTextField txtinicioFecha;
+    // private javax.swing.JTextField txtTerminoFecha; // Replaced by jdcTerminoFecha
+    // private javax.swing.JTextField txtinicioFecha; // Replaced by jdcInicioFecha
+    // JDateChooser components are already declared as class fields: jdcInicioFecha, jdcTerminoFecha
     // End of variables declaration//GEN-END:variables
 }

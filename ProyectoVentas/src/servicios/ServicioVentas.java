@@ -3,8 +3,10 @@ package servicios;
 import datos.VentaDatos;
 import entidades.DetalleVenta;
 import entidades.Venta;
+import entidades.dto.VentaDisplayDTO;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,5 +39,19 @@ public class ServicioVentas {
                 detalles
         );
         return ventaDatos.registrarVenta(v);
+    }
+
+    public List<VentaDisplayDTO> consultarVentasDetalladas(String nombreVendedor, LocalDate fechaInicio, LocalDate fechaFin) throws SQLException {
+        return ventaDatos.obtenerVentasParaDisplay(nombreVendedor, fechaInicio, fechaFin);
+    }
+
+    /**
+     * Consulta todas las ventas detalladas sin aplicar filtros.
+     * @return Lista de todas las ventas con sus detalles.
+     * @throws SQLException Si ocurre un error durante la consulta a la base de datos.
+     */
+    public List<VentaDisplayDTO> consultarVentasDetalladas() throws SQLException {
+        // Llama al método modificado con parámetros nulos para obtener todos los resultados
+        return ventaDatos.obtenerVentasParaDisplay(null, null, null);
     }
 }

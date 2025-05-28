@@ -17,6 +17,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
 
     // Acceso a datos
     private final AdministradorDatos datos = new AdministradorDatos();
+    private Administrador adminAEditar;
 
     /**
      * Creates new form CrearAdminFrame
@@ -24,6 +25,25 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     public CrearAdminFrame() {
         initComponents();
         setLocationRelativeTo(null);
+    }
+
+    public CrearAdminFrame(Administrador admin) {
+        this.adminAEditar = admin;
+        initComponents();
+        setLocationRelativeTo(null);
+        inicializarFormularioParaEdicion();
+    }
+
+    private void inicializarFormularioParaEdicion() {
+        if (this.adminAEditar != null) {
+            txtUsuario.setText(adminAEditar.usuario());
+            txtNombre.setText(adminAEditar.nombreCompleto());
+            txtCorreo.setText(adminAEditar.correo());
+            jCheckBoxAdminMaestro.setSelected(adminAEditar.adminMaestro());
+            jButtonCrearAdmin.setText("Guardar Cambios");
+            this.setTitle("Editar Administrador");
+            // Los campos de contraseña se dejan vacíos intencionalmente
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -46,7 +66,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
         jButtonCancelar = new javax.swing.JButton();
         BtnRegresar = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(51, 102, 255));
 
@@ -249,63 +269,126 @@ public class CrearAdminFrame extends javax.swing.JFrame {
 
     private void jButtonCrearAdminActionPerformed(java.awt.event.ActionEvent evt) {
         String usuario = txtUsuario.getText().trim();
-        String pass1   = new String(jPasswordField1.getPassword());
-        String pass2   = new String(jPasswordFieldConfirmar.getPassword());
-        String nombre  = txtNombre.getText().trim();
-        String correo  = txtCorreo.getText().trim();
+        String nombre = txtNombre.getText().trim();
+        String correo = txtCorreo.getText().trim();
         boolean esMaestro = jCheckBoxAdminMaestro.isSelected();
+        String pass1 = new String(jPasswordField1.getPassword());
+        String pass2 = new String(jPasswordFieldConfirmar.getPassword());
 
-        // Validaciones
-        if (usuario.isEmpty() || pass1.isEmpty() || pass2.isEmpty() || nombre.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Completa todos los campos obligatorios",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (!pass1.equals(pass2)) {
-            JOptionPane.showMessageDialog(this,
-                "Las contraseñas no coinciden",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        try {
-            // Un sólo Admin Maestro
-            if (esMaestro && datos.existeAdminMaestro()) {
+        if (this.adminAEditar == null) {
+            // ----- MODO CREACIÓN -----
+            // Validaciones para Creación
+            if (usuario.isEmpty() || pass1.isEmpty() || pass2.isEmpty() || nombre.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Ya existe un Administrador Maestro",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                        "Completa todos los campos obligatorios (usuario, contraseñas, nombre)",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // Usuario único
-            if (datos.buscarPorUsuario(usuario).isPresent()) {
+            if (!pass1.equals(pass2)) {
                 JOptionPane.showMessageDialog(this,
-                    "El nombre de usuario ya existe",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                        "Las contraseñas no coinciden",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // Crear y persistir
-            String hash = UtilHash.hash(pass1);
-            Administrador nuevo = new Administrador(
-                0, usuario, hash, nombre, correo, true, esMaestro
-            );
-            datos.insertar(nuevo);
-            JOptionPane.showMessageDialog(this,
-                "Administrador creado con éxito",
-                "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            try {
+                // Un sólo Admin Maestro (en creación)
+                if (esMaestro && datos.existeAdminMaestro()) {
+                    JOptionPane.showMessageDialog(this,
+                            "Ya existe un Administrador Maestro. Solo puede haber uno.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Usuario único (en creación)
+                if (datos.buscarPorUsuario(usuario).isPresent()) {
+                    JOptionPane.showMessageDialog(this,
+                            "El nombre de usuario ya existe",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Crear y persistir
+                String hash = UtilHash.hash(pass1);
+                Administrador nuevo = new Administrador(
+                        0, usuario, hash, nombre, correo, true, esMaestro);
+                datos.insertar(nuevo);
+                JOptionPane.showMessageDialog(this,
+                        "Administrador creado con éxito",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                this.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        ex.getMessage(),
+                        "Error al crear administrador",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            // ----- MODO EDICIÓN -----
+            // Validaciones para Edición
+            if (usuario.isEmpty() || nombre.isEmpty() || correo.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Los campos Usuario, Nombre completo y Correo no pueden estar vacíos.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            new LoginFrame().setVisible(true);
-            this.dispose();
+            // Validación de contraseña (solo si se intenta cambiar)
+            if (!pass1.isEmpty() && !pass1.equals(pass2)) {
+                JOptionPane.showMessageDialog(this,
+                        "Las contraseñas no coinciden. Si no desea cambiar la contraseña, deje ambos campos vacíos.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                ex.getMessage(),
-                "Error al crear administrador",
-                JOptionPane.ERROR_MESSAGE);
+            try {
+                // Admin Maestro Unicidad (en edición)
+                if (esMaestro && !this.adminAEditar.adminMaestro() && datos.existeAdminMaestro()) {
+                    JOptionPane.showMessageDialog(this,
+                            "Ya existe un Administrador Maestro. No se puede asignar este rol a otro administrador.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Usuario único (en edición, si cambió el usuario)
+                if (!usuario.equals(this.adminAEditar.usuario()) && datos.buscarPorUsuario(usuario).isPresent()) {
+                    JOptionPane.showMessageDialog(this,
+                            "El nuevo nombre de usuario ya existe",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                // Preparar datos para actualizar
+                String passwordHashParaActualizar;
+                if (!pass1.isEmpty()) { // Si se ingresó nueva contraseña
+                    passwordHashParaActualizar = UtilHash.hash(pass1);
+                } else { // Mantener contraseña anterior
+                    passwordHashParaActualizar = this.adminAEditar.hash(); // Reverted to .hash()
+                }
+
+                Administrador adminActualizado = new Administrador(
+                        this.adminAEditar.id(),
+                        usuario,
+                        passwordHashParaActualizar,
+                        nombre,
+                        correo,
+                        this.adminAEditar.activo(), // Mantener estado de actividad
+                        esMaestro);
+
+                datos.actualizar(adminActualizado);
+                JOptionPane.showMessageDialog(this,
+                        "Administrador actualizado con éxito",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                this.dispose();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        ex.getMessage(),
+                        "Error al actualizar administrador",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
     private void jButtonCancelarActionPerformed(java.awt.event.ActionEvent evt) {
-        new LoginFrame().setVisible(true);
+        // new LoginFrame().setVisible(true); // Not needed here, handled by window listener
         this.dispose();
     }
 
