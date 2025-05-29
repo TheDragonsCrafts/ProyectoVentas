@@ -24,7 +24,25 @@ export interface RegisterDTO {
   nombre_completo: string;
   correo_electronico: string;
   password_plana: string;
-  rol: UserRole; // Backend /api/auth/register expects 'rol'
+  rol: UserRole; 
+}
+
+// DTO for creating an Admin by a Master Admin (corresponds to backend's /api/admins POST)
+export interface AdminCreateDTO {
+  nombre_completo: string;
+  correo_electronico: string;
+  password_plana: string;
+  rol: UserRole;
+  // 'activo' typically defaults to true on backend or isn't set at creation by this DTO
+}
+
+// DTO for updating an Admin by a Master Admin (corresponds to backend's /api/admins/:id PUT)
+export interface AdminUpdateDTO {
+  nombre_completo?: string;
+  correo_electronico?: string;
+  password_plana?: string; // Optional: only if changing
+  rol?: UserRole;
+  activo?: boolean;
 }
 
 export interface AuthResponse {
