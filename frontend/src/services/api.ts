@@ -64,6 +64,47 @@ export const deleteAdmin = async (id: number): Promise<void> => {
   await apiClient.delete(`/admins/${id}`); 
 };
 
+// --- Product Management Functions ---
+interface GetProductsParams {
+  nombre?: string;
+  activo?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+interface GetProductsResponse {
+  data: import('@/types/Producto').Producto[]; // Backend returns { data, total, limit, offset }
+  total: number;
+  // limit: number; // Not strictly needed by caller if API returns it but frontend manages it
+  // offset: number;
+}
+
+export const getProducts = async (params: GetProductsParams): Promise<GetProductsResponse> => {
+  const response = await apiClient.get<GetProductsResponse>('/products', { params });
+  return response.data; // Assuming backend wraps product array in a 'data' field and includes 'total'
+};
+
+export const getProductById = async (id: number): Promise<import('@/types/Producto').Producto> => {
+  const response = await apiClient.get<import('@/types/Producto').Producto>(`/products/${id}`);
+  return response.data;
+};
+
+export const createProduct = async (productData: import('@/types/Producto').ProductoCreateDTO): Promise<import('@/types/Producto').Producto> => {
+  const response = await apiClient.post<import('@/types/Producto').Producto>('/products', productData);
+  return response.data;
+};
+
+export const updateProduct = async (id: number, productData: import('@/types/Producto').ProductoUpdateDTO): Promise<import('@/types/Producto').Producto> => {
+  const response = await apiClient.put<import('@/types/Producto').Producto>(`/products/${id}`, productData);
+  return response.data;
+};
+
+// Backend's logical delete for products returns the updated (inactive) product.
+export const deleteProduct = async (id: number): Promise<import('@/types/Producto').Producto> => {
+  const response = await apiClient.delete<import('@/types/Producto').Producto>(`/products/${id}`);
+  return response.data; 
+};
+
 
 // You can add other API functions here, e.g., for products, sales, etc.
 

@@ -33,8 +33,13 @@ const Sidebar: React.FC = () => {
             </Link>
           </li>
           <li>
-            <Link to="/sales" className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
-              Ventas
+            <Link to="/sales/new" className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+              Nueva Venta
+            </Link>
+          </li>
+          <li>
+            <Link to="/sales/history" className="block px-3 py-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+              Historial Ventas
             </Link>
           </li>
           {isMaster && (
