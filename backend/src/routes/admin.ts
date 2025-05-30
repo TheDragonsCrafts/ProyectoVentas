@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db/connection';
 import { Administrador, AdministradorCreateDTO, AdministradorPublic, RolAdministrador } from '../types/Administrador';
@@ -11,7 +11,7 @@ router.use(authenticateToken);
 router.use(isMasterAdmin);
 
 // GET /api/admins - List All Administrators
-router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     // Selecting all fields that are part of AdministradorPublic or needed for it.
     // Explicitly list columns to avoid sending sensitive data like 'contrasena'.
@@ -46,7 +46,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // GET /api/admins/:id - Get Administrator by ID
-router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const { id } = req.params;
 
   if (isNaN(parseInt(id, 10))) {
@@ -91,7 +91,7 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // POST /api/admins - Create New Administrator (Master Admin only)
-router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', async (req: AuthenticatedRequest, res: express.Response) => {
   const { 
     nombre_completo, 
     correo_electronico, 
@@ -157,7 +157,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // PUT /api/admins/:id - Update Administrator
-router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const { id } = req.params;
   const adminIdToUpdate = parseInt(id, 10);
 
@@ -282,7 +282,7 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // DELETE /api/admins/:id - Logically delete an Administrator
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const { id } = req.params;
   const adminIdToDelete = parseInt(id, 10);
   const currentUserId = req.user!.id_administrador; // From authenticateToken middleware

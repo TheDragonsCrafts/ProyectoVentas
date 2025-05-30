@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import authRoutes from './routes/auth'; // Import auth routes
 import adminRoutes from './routes/admin'; // Import admin routes
 import productRoutes from './routes/product'; // Import product routes
@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (req: express.Request, res: express.Response) => {
   res.status(200).send('Server is healthy');
 });
 

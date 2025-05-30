@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg';
+import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Connection parameters should ideally be sourced from environment variables
 // For example:
@@ -39,7 +39,7 @@ pool.on('error', (err, client) => {
  * @param params Optional array of parameters for parameterized queries.
  * @returns A Promise that resolves with the query result.
  */
-export const query = async <T = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
+export const query = async <T extends QueryResultRow = any>(text: string, params?: any[]): Promise<QueryResult<T>> => {
   const start = Date.now();
   try {
     const client = await pool.connect();

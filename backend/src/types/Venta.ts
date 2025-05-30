@@ -26,3 +26,6 @@ export interface VentaCreateDTO {
 export interface VentaConDetalles extends Venta {
   detalles: DetalleVenta[];
 }
+
+// Re-exporting for use in other modules if they import from '.../types/Venta'
+export { DetalleVenta, DetalleVentaCreateDTO };

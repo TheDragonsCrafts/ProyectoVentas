@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import jwt from 'jsonwebtoken';
 import { RolAdministrador } from '../types/Administrador';
 
 // JWT Secret: Should be in an environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-and-complex-key-dev';
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends express.Request {
   user?: {
     id_administrador: number;
     correo_electronico: string;
@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -37,7 +37,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
   });
 };
 
-export const isMasterAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const isMasterAdmin = (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
   if (!req.user) {
     // This should ideally not happen if authenticateToken is run first
     return res.status(401).json({ message: 'Usuario no autenticado.' });
@@ -53,7 +53,7 @@ export const isMasterAdmin = (req: AuthenticatedRequest, res: Response, next: Ne
 
 // Example of a role-based authorization middleware (optional, for general roles)
 export const authorizeRoles = (...allowedRoles: RolAdministrador[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
     if (!req.user || !req.user.rol) {
       return res.status(401).json({ message: 'Usuario no autenticado o rol no definido.' });
     }

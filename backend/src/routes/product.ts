@@ -1,6 +1,6 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { query } from '../db/connection';
-import { Producto, ProductoCreateDTO, CategoriaProducto } from '../types/Producto'; // Assuming ProductoCreateDTO will be defined or adapted
+import { Producto, ProductoCreateDTO, ProductoUpdateDTO, CategoriaProducto } from '../types/Producto'; // Added ProductoUpdateDTO
 import { authenticateToken, AuthenticatedRequest } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 // GET /api/products - List All Products (with filtering and search)
-router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: express.Response) => {
   const { activo, nombre, limit = 10, offset = 0 } = req.query; // 'activo' is now the standard
 
   let activoFilter: boolean | undefined; // Renamed from disponibilidadFilter
@@ -97,7 +97,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // POST /api/products - Create New Product
-router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', async (req: AuthenticatedRequest, res: express.Response) => {
   const {
     id_producto, // Now required
     nombre_producto,
@@ -179,7 +179,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // PUT /api/products/:id - Update Product
-router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const pathProductId = parseInt(req.params.id, 10);
   if (isNaN(pathProductId)) {
     return res.status(400).json({ message: 'ID de producto en URL inválido.' });
@@ -296,7 +296,7 @@ router.put('/:id', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // DELETE /api/products/:id - Logically delete a product
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const productId = parseInt(req.params.id, 10);
   if (isNaN(productId)) {
     return res.status(400).json({ message: 'ID de producto inválido.' });
@@ -347,5 +347,8 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
 
 
 // GET /api/products/:id - Get Product by ID (only if active)
-router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:id', async (req: AuthenticatedRequest, res: express.Response) => {
   const { id } = req.params;
+});
+
+export default router;

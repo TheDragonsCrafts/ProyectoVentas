@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import pool, { query } from '../db/connection'; 
 import { authenticateToken, AuthenticatedRequest } from '../middleware/authMiddleware';
 // Removed MetodoPago from import, Venta and DetalleVenta should be fine
@@ -11,7 +11,7 @@ const router = express.Router();
 router.use(authenticateToken);
 
 // Part 1: Create New Sale
-router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', async (req: AuthenticatedRequest, res: express.Response) => {
   // Removed metodo_pago from destructuring
   const { detalles } = req.body as VentaCreateDTO; 
   const id_administrador_venta = req.user!.id_administrador;
@@ -123,7 +123,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
 
 
 // Part 2: Sales Reporting
-router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: express.Response) => {
   const { adminId, fechaInicio, fechaFin, limit = 10, offset = 0 } = req.query;
 
   const numLimit = parseInt(limit as string, 10);

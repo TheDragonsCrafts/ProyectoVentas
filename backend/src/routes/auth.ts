@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../db/connection';
@@ -10,7 +10,7 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-and-complex-key-dev';
 
 // POST /api/auth/register
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', async (req: express.Request, res: express.Response) => {
   const { 
     nombre_completo, 
     correo_electronico, 
@@ -78,7 +78,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: express.Request, res: express.Response) => {
   const { correo_electronico, password_plana } = req.body;
 
   if (!correo_electronico || !password_plana) {
