@@ -201,12 +201,12 @@ public class LoginFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_BtnCrearAdminActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private MaterialButton BtnCrearAdmin;
-    private javax.swing.JPanel buttonPanel;
-    private MaterialButton btnIniciarSesion;
-    private javax.swing.JPanel jPanel1;
-    private MaterialPasswordField jPasswordField1;
-    private MaterialTextField UsuarioTextField;
+    MaterialButton BtnCrearAdmin;
+    javax.swing.JPanel buttonPanel;
+    MaterialButton btnIniciarSesion;
+    javax.swing.JPanel jPanel1;
+    MaterialPasswordField jPasswordField1;
+    MaterialTextField UsuarioTextField;
     // End of variables declaration//GEN-END:variables
 
     // Flag for testing dispose behavior
