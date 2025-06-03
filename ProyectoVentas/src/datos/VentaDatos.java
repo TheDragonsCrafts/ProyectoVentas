@@ -144,8 +144,8 @@ public class VentaDatos {
             }
         } finally {
             if (cx != null) {
-                // cx.setAutoCommit(true); // Assuming default is true and was not changed for read.
-                cx.close();
+                // Do not close the shared connection managed by ConexionBD.
+                // Simply ensure any open resources have been released.
             }
         }
         return ventasDisplay;
