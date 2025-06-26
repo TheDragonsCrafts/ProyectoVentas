@@ -6,6 +6,7 @@ import entidades.Producto;
 import entidades.DetalleVenta;
 import seguridad.Session;
 import ui.login.LoginFrame;
+import ui.menu.Menu_Principal; // Importación añadida
 
 import javax.swing.JOptionPane;
 import javax.swing.SpinnerNumberModel;
@@ -335,8 +336,12 @@ public class Venta extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this,
                 "Venta registrada con ID " + ventaId,
                 "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            this.dispose();
-            new LoginFrame().setVisible(true);
+            // Resetear estado para nueva venta
+            detallesList.clear();
+            model.setRowCount(0); // Limpiar tabla
+            cargarProductos(); // Recargar productos y actualizar ComboBox
+            actualizarTotal(); // Poner total en 0.00
+            // No cerrar esta ventana, permitir más ventas.
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                 ex.getMessage(),
@@ -346,7 +351,7 @@ public class Venta extends javax.swing.JFrame {
 
     private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCancelarActionPerformed
         this.dispose();
-        new LoginFrame().setVisible(true);
+        new ui.menu.Menu_Principal().setVisible(true); // Navegar al menú principal
     }//GEN-LAST:event_BtnCancelarActionPerformed
 
     private void txtPagoTotalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPagoTotalActionPerformed
