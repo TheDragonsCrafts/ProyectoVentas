@@ -2,6 +2,7 @@ package ui.admin;
 
 import datos.AdministradorDatos;
 import entidades.Administrador;
+import java.util.List;
 import seguridad.UtilHash;
 import ui.login.LoginFrame;
 
