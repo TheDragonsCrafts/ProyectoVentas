@@ -34,7 +34,6 @@ public class LoginFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonPanel = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         UsuarioTextField = new javax.swing.JTextField();
         jPasswordField1 = new javax.swing.JPasswordField();
@@ -42,14 +41,9 @@ public class LoginFrame extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         btnIniciarSesion = new javax.swing.JButton();
         BtnCrearAdmin = new javax.swing.JButton();
+        btnOlvidastelacontrasena = new javax.swing.JButton();
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-        buttonPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER));
-        buttonPanel.add(BtnCrearAdmin);
-        buttonPanel.add(btnIniciarSesion);
-        // Optional: make buttonPanel transparent if its background clashes with jPanel1
-buttonPanel.setOpaque(false);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(0, 102, 255));
 
@@ -76,7 +70,7 @@ buttonPanel.setOpaque(false);
         btnIniciarSesion.setBackground(new java.awt.Color(0, 0, 0));
         btnIniciarSesion.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
         btnIniciarSesion.setForeground(new java.awt.Color(255, 255, 255));
-        btnIniciarSesion.setText("Iniciar sesión");
+        btnIniciarSesion.setText("Iniciar sesion");
         btnIniciarSesion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnIniciarSesionActionPerformed(evt);
@@ -93,25 +87,43 @@ buttonPanel.setOpaque(false);
             }
         });
 
+        btnOlvidastelacontrasena.setBackground(new java.awt.Color(0, 0, 0));
+        btnOlvidastelacontrasena.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
+        btnOlvidastelacontrasena.setForeground(new java.awt.Color(255, 255, 255));
+        btnOlvidastelacontrasena.setText("Olvidaste la contraseña?");
+        btnOlvidastelacontrasena.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnOlvidastelacontrasenaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(236, Short.MAX_VALUE)
+                .addComponent(BtnCrearAdmin)
+                .addGap(62, 62, 62)
+                .addComponent(btnIniciarSesion)
+                .addGap(255, 255, 255))
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(316, 316, 316)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPasswordField1)
-                    .addComponent(UsuarioTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE))
-                .addContainerGap(316, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(413, 413, 413)
-                .addComponent(jLabel1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(316, 316, 316)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPasswordField1)
+                            .addComponent(UsuarioTextField, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(413, 413, 413)
+                        .addComponent(jLabel1))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(394, 394, 394)
+                        .addComponent(jLabel2))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(331, 331, 331)
+                        .addComponent(btnOlvidastelacontrasena)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(394, 394, 394)
-                .addComponent(jLabel2)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addComponent(buttonPanel, javax.swing.GroupLayout.Alignment.CENTER, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -125,8 +137,12 @@ buttonPanel.setOpaque(false);
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(45, 45, 45)
-                .addComponent(buttonPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(143, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnIniciarSesion, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(BtnCrearAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(btnOlvidastelacontrasena, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(82, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -223,6 +239,10 @@ buttonPanel.setOpaque(false);
         this.setVisible(false); // Ocultar este LoginFrame en lugar de cerrarlo
     }//GEN-LAST:event_BtnCrearAdminActionPerformed
 
+    private void btnOlvidastelacontrasenaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOlvidastelacontrasenaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnOlvidastelacontrasenaActionPerformed
+
     /**
      * Este método es llamado por CrearAdminFrame cuando el primer administrador maestro
      * ha sido creado exitosamente.
@@ -237,13 +257,13 @@ buttonPanel.setOpaque(false);
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton BtnCrearAdmin;
-    private javax.swing.JPanel buttonPanel;
+    private javax.swing.JTextField UsuarioTextField;
     private javax.swing.JButton btnIniciarSesion;
+    private javax.swing.JButton btnOlvidastelacontrasena;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPasswordField jPasswordField1;
-    private javax.swing.JTextField UsuarioTextField;
     // End of variables declaration//GEN-END:variables
 
     public static void main(String args[]) {
