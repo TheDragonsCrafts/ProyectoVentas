@@ -14,6 +14,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.List;
+import ui.login.LoginFrame;
 
 /**
  *
@@ -255,17 +256,115 @@ public class Gestion_Administradores extends javax.swing.JFrame {
         try {
             int adminId = (int) jTable1.getValueAt(selectedRow, 0);
             String nombreUsuario = (String) jTable1.getValueAt(selectedRow, 1);
+            boolean esAdminMaestro = jTable1.getValueAt(selectedRow, 5).equals("Maestro");
+
+            AdministradorDatos adminDatos = new AdministradorDatos();
+
+            if (esAdminMaestro) {
+                int numAdminsMaestros = adminDatos.contarAdministradoresMaestros();
+                int numAdminsActivos = adminDatos.contarAdministradoresActivos();
+
+                if (numAdminsMaestros <= 1 && numAdminsActivos <= 1) {
+                    JOptionPane.showMessageDialog(this, "No se puede eliminar al único Administrador Maestro activo.", "Acción no permitida", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (numAdminsMaestros <= 1 && numAdminsActivos > 1) {
+                    // Intentando eliminar el único admin maestro, pero hay otros admins
+                    List<Administrador> otrosAdmins = adminDatos.listarTodos().stream()
+                            .filter(a -> a.id() != adminId && a.activo())
+                            .toList();
+
+                    if (otrosAdmins.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "No hay otros administradores activos para transferir el rol de Maestro.", "Acción no permitida", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    Administrador[] posiblesNuevosMaestros = otrosAdmins.toArray(new Administrador[0]);
+                    Administrador nuevoMaestroSeleccionado = (Administrador) JOptionPane.showInputDialog(
+                            this,
+                            "Debe transferir el rol de Administrador Maestro.\nSeleccione un nuevo Administrador Maestro:",
+                            "Transferir Rol Maestro",
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            posiblesNuevosMaestros,
+                            posiblesNuevosMaestros[0]
+                    );
+
+                    if (nuevoMaestroSeleccionado == null) {
+                        JOptionPane.showMessageDialog(this, "Debe seleccionar un nuevo Administrador Maestro para poder eliminar al actual.", "Transferencia cancelada", JOptionPane.WARNING_MESSAGE);
+                        return; // El usuario canceló la selección
+                    }
+
+                    // Obtener el administrador actual que se va a eliminar y dejará de ser maestro
+                    java.util.Optional<Administrador> adminActualOpt = adminDatos.buscarPorId(adminId);
+                    if (adminActualOpt.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "No se encontró el administrador maestro actual en la base de datos.", "Error Interno", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    Administrador adminActual = adminActualOpt.get();
+
+                    // 1. Degradar al administrador actual (quitarle el rol de maestro)
+                    Administrador adminActualDegradado = new Administrador(
+                            adminActual.id(), adminActual.usuario(), adminActual.hash(),
+                            adminActual.nombreCompleto(), adminActual.correo(),
+                            adminActual.activo(), false // esAdminMaestro = false
+                    );
+                    boolean degradacionExitosa = adminDatos.actualizar(adminActualDegradado);
+                    if (!degradacionExitosa) {
+                        JOptionPane.showMessageDialog(this, "Error al degradar al actual Administrador Maestro.", "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    // 2. Promover al nuevo administrador maestro
+                    Administrador nuevoMaestroPromovido = new Administrador(
+                            nuevoMaestroSeleccionado.id(), nuevoMaestroSeleccionado.usuario(), nuevoMaestroSeleccionado.hash(),
+                            nuevoMaestroSeleccionado.nombreCompleto(), nuevoMaestroSeleccionado.correo(),
+                            nuevoMaestroSeleccionado.activo(), true // esAdminMaestro = true
+                    );
+                    boolean promocionExitosa = adminDatos.actualizar(nuevoMaestroPromovido);
+                    if (!promocionExitosa) {
+                        // Intentar revertir la degradación si la promoción falla
+                        adminDatos.actualizar(new Administrador(
+                                adminActual.id(), adminActual.usuario(), adminActual.hash(),
+                                adminActual.nombreCompleto(), adminActual.correo(),
+                                adminActual.activo(), true // Revertir a esAdminMaestro = true
+                        ));
+                        JOptionPane.showMessageDialog(this, "Error al promover al nuevo Administrador Maestro. Se ha intentado revertir la degradación del anterior.", "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    // Actualizar la variable esAdminMaestro a false para el admin que se va a eliminar,
+                    // ya que el rol ha sido transferido.
+                    esAdminMaestro = false;
+                }
+            }
+
+
+            // Si el administrador es maestro y es el único activo, ya se habrá bloqueado la eliminación antes.
+            // Si era maestro y el rol se transfirió, esAdminMaestro ahora es false.
+            // Si no era maestro, esAdminMaestro ya era false.
+            // Por lo tanto, aquí no necesitamos verificar esAdminMaestro para la confirmación de eliminación.
 
             String mensajeConfirmacion = String.format("¿Está seguro de que desea eliminar al administrador '%s'? Esta acción no se puede deshacer.", nombreUsuario);
             int confirmacion = JOptionPane.showConfirmDialog(this, mensajeConfirmacion, "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
             if (confirmacion == JOptionPane.YES_OPTION) {
-                // Prevent deletion of the admin itself if it's the only one or only master admin (optional safety check)
-                // For example, check if this admin is the last admin_maestro or last admin overall.
-                // This logic can be complex and depends on specific business rules.
-                // For now, proceeding with direct deletion as per task.
+                // Verificar si el administrador tiene ventas asociadas ANTES de intentar eliminar
+                datos.VentaDatos ventaDatos = new datos.VentaDatos();
+                boolean tieneVentas = false;
+                try {
+                    tieneVentas = ventaDatos.existenVentasParaAdministrador(adminId);
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Error al verificar las ventas del administrador: " + e.getMessage(), "Error de Verificación", JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                    return; // No proceder si hay error verificando ventas
+                }
 
-                AdministradorDatos adminDatos = new AdministradorDatos();
+                if (tieneVentas) {
+                    JOptionPane.showMessageDialog(this, "El administrador '" + nombreUsuario + "' no puede ser eliminado porque tiene ventas asociadas.", "Eliminación no permitida", JOptionPane.ERROR_MESSAGE);
+                    return; // No proceder con la eliminación
+                }
+
                 boolean exito = adminDatos.eliminar(adminId);
 
                 if (exito) {
@@ -322,6 +421,15 @@ public class Gestion_Administradores extends javax.swing.JFrame {
                     @Override
                     public void windowClosed(WindowEvent e) {
                         cargarAdministradores(); // Refresh table after edit frame is closed
+                        if (editarFrame.editorPerdioRolMaestro()) {
+                            // El editor (usuario actual) ya no es Admin Maestro.
+                            // Cerrar esta ventana y mostrar el login.
+                            JOptionPane.showMessageDialog(Gestion_Administradores.this,
+                                    "Su rol de Administrador Maestro ha sido transferido.\nDebe iniciar sesión nuevamente.",
+                                    "Rol Transferido", JOptionPane.INFORMATION_MESSAGE);
+                            new LoginFrame().setVisible(true);
+                            Gestion_Administradores.this.dispose();
+                        }
                     }
                 });
                 editarFrame.setVisible(true);
@@ -341,6 +449,17 @@ public class Gestion_Administradores extends javax.swing.JFrame {
             @Override
             public void windowClosed(WindowEvent e) {
                 cargarAdministradores();
+                // Aunque editorPerdioRolMaestro es principalmente para el flujo de edición,
+                // lo mantenemos aquí por consistencia estructural del listener.
+                // En la práctica, no se espera que sea true en el flujo de nueva creación
+                // según la lógica actual de CrearAdminFrame.
+                if (crearAdminFrame.editorPerdioRolMaestro()) {
+                    JOptionPane.showMessageDialog(Gestion_Administradores.this,
+                            "Su rol de Administrador Maestro ha sido afectado.\nDebe iniciar sesión nuevamente.",
+                            "Rol Modificado", JOptionPane.INFORMATION_MESSAGE);
+                    new LoginFrame().setVisible(true);
+                    Gestion_Administradores.this.dispose();
+                }
             }
         });
         crearAdminFrame.setVisible(true);
@@ -358,15 +477,55 @@ public class Gestion_Administradores extends javax.swing.JFrame {
             int adminId = (int) jTable1.getValueAt(selectedRow, 0);
             String nombreUsuario = (String) jTable1.getValueAt(selectedRow, 1); // For confirmation dialog
             String estadoActualStr = (String) jTable1.getValueAt(selectedRow, 4);
+            boolean esAdminMaestro = jTable1.getValueAt(selectedRow, 5).equals("Maestro");
             boolean estadoActual = estadoActualStr.equals("Sí");
-            boolean nuevoEstado = !estadoActual;
-            String nuevoEstadoStr = nuevoEstado ? "Activo" : "Inactivo";
+            boolean nuevoEstado = !estadoActual; // Intentar cambiar a este estado
 
+            AdministradorDatos adminDatos = new AdministradorDatos();
+
+            // Prevenir la desactivación del único administrador maestro activo
+            if (esAdminMaestro && estadoActual && !nuevoEstado) { // Si es maestro, está activo y se intenta desactivar
+                int numAdminsMaestrosActivos = 0;
+                List<Administrador> todosLosAdmins = adminDatos.listarTodos();
+                for (Administrador admin : todosLosAdmins) {
+                    if (admin.adminMaestro() && admin.activo()) {
+                        numAdminsMaestrosActivos++;
+                    }
+                }
+                // O podríamos usar adminDatos.contarAdministradoresMaestros() si solo nos importan los maestros en general,
+                // pero para desactivación, es más relevante cuántos *activos* maestros quedarían.
+                // Sin embargo, la regla es sobre *el* admin maestro. Si es el único, no se desactiva.
+                // Contar todos los admins activos es más simple para la regla "no puede quedar sin admins activos"
+                long otrosAdminsActivosNoMaestros = todosLosAdmins.stream()
+                        .filter(a -> a.id() != adminId && a.activo() && !a.adminMaestro())
+                        .count();
+                long otrosAdminsMaestrosActivos = todosLosAdmins.stream()
+                        .filter(a -> a.id() != adminId && a.adminMaestro() && a.activo())
+                        .count();
+
+
+                if (adminDatos.contarAdministradoresMaestros() <= 1 && adminDatos.contarAdministradoresActivos() == 1) {
+                     JOptionPane.showMessageDialog(this,
+                            "No se puede desactivar al único Administrador Maestro activo si no hay otros administradores activos.",
+                            "Acción no permitida", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                 if (esAdminMaestro && adminDatos.contarAdministradoresMaestros() <=1 && !nuevoEstado && (otrosAdminsActivosNoMaestros + otrosAdminsMaestrosActivos ==0) ){
+                     JOptionPane.showMessageDialog(this,
+                            "No se puede desactivar al único Administrador Maestro si es el único administrador activo.",
+                            "Acción no permitida", JOptionPane.ERROR_MESSAGE);
+                    return;
+                 }
+
+
+            }
+
+
+            String nuevoEstadoStr = nuevoEstado ? "Activo" : "Inactivo";
             String mensajeConfirmacion = String.format("¿Desea cambiar el estado de '%s' a '%s'?", nombreUsuario, nuevoEstadoStr);
             int confirmacion = JOptionPane.showConfirmDialog(this, mensajeConfirmacion, "Confirmar Cambio de Estado", JOptionPane.YES_NO_OPTION);
 
             if (confirmacion == JOptionPane.YES_OPTION) {
-                AdministradorDatos adminDatos = new AdministradorDatos();
                 boolean exito = adminDatos.actualizarEstadoActivo(adminId, nuevoEstado);
 
                 if (exito) {

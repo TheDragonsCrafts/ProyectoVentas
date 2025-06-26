@@ -11,6 +11,8 @@ public class LoginFrame extends javax.swing.JFrame {
 
     // Servicio de login (campo manual, fuera de los guarded blocks)
     private final ServicioLogin servicioLogin = new ServicioLogin();
+    private int intentosFallidos = 0; // Contador de intentos fallidos
+    private boolean primerAdminFueCreadoExitosamente = false; // Bandera
 
     public LoginFrame() {
         initComponents();
@@ -174,18 +176,64 @@ buttonPanel.setOpaque(false);
             this.dispose();
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                ex.getMessage(),
-                "Error al iniciar sesión",
-                JOptionPane.ERROR_MESSAGE);
+            intentosFallidos++;
+            if (intentosFallidos >= 5) {
+                JOptionPane.showMessageDialog(this,
+                    "Ha superado el número máximo de intentos de inicio de sesión.",
+                    "Límite de intentos excedido",
+                    JOptionPane.ERROR_MESSAGE);
+                System.exit(0); // Cierra la aplicación
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    ex.getMessage() + "\nIntentos restantes: " + (5 - intentosFallidos),
+                    "Error al iniciar sesión",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }                                                
 
     private void BtnCrearAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCrearAdminActionPerformed
-        // Abre ventana de creación de admin
-        new ui.admin.CrearAdminFrame().setVisible(true);
-        this.dispose();
+        // Abre ventana de creación de admin, pasando esta instancia de LoginFrame
+        ui.admin.CrearAdminFrame crearAdminFrame = new ui.admin.CrearAdminFrame(this);
+
+        // Escuchar cuando se cierra CrearAdminFrame
+        crearAdminFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                if (!primerAdminFueCreadoExitosamente) {
+                    // Si CrearAdminFrame se cerró (ej. por cancelación) y el primer admin NO fue creado,
+                    // volver a mostrar este LoginFrame.
+                    LoginFrame.this.setVisible(true);
+                    // Re-evaluar estado de botones por si acaso, aunque no debería haber cambiado
+                    AdministradorDatos adminDatosCheck = new AdministradorDatos();
+                    if (!adminDatosCheck.existeAdminMaestro()) {
+                        BtnCrearAdmin.setVisible(true);
+                        btnIniciarSesion.setVisible(false);
+                    } else {
+                        BtnCrearAdmin.setVisible(false);
+                        btnIniciarSesion.setVisible(true);
+                    }
+                }
+                // Si primerAdminFueCreadoExitosamente es true, este LoginFrame ya se habrá cerrado
+                // y uno nuevo se habrá abierto desde primerAdminMaestroCreado().
+            }
+        });
+
+        crearAdminFrame.setVisible(true);
+        this.setVisible(false); // Ocultar este LoginFrame en lugar de cerrarlo
     }//GEN-LAST:event_BtnCrearAdminActionPerformed
+
+    /**
+     * Este método es llamado por CrearAdminFrame cuando el primer administrador maestro
+     * ha sido creado exitosamente.
+     */
+    public void primerAdminMaestroCreado() {
+        this.primerAdminFueCreadoExitosamente = true;
+        // Cerrar esta instancia de LoginFrame (que está oculta)
+        this.dispose();
+        // Abrir una nueva instancia de LoginFrame, que ahora mostrará el botón de Iniciar Sesión
+        SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton BtnCrearAdmin;

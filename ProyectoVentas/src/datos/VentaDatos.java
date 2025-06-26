@@ -150,4 +150,31 @@ public class VentaDatos {
         }
         return ventasDisplay;
     }
+
+    /**
+     * Verifica si existen ventas asociadas a un administrador específico.
+     * @param idAdministrador el ID del administrador a verificar.
+     * @return true si existen ventas, false en caso contrario.
+     * @throws SQLException si ocurre un error de base de datos.
+     */
+    public boolean existenVentasParaAdministrador(int idAdministrador) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM ventas WHERE id_administrador = ?";
+        Connection cx = null;
+        try {
+            cx = ConexionBD.obtener(); // Obtener conexión
+            try (PreparedStatement ps = cx.prepareStatement(sql)) {
+                ps.setInt(1, idAdministrador);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1) > 0;
+                    }
+                }
+            }
+        } finally {
+            // No cerramos la conexión aquí ya que es manejada por ConexionBD
+            // Si ConexionBD no maneja un pool y crea nuevas conexiones, debería cerrarse.
+            // Asumiendo que ConexionBD.obtener() devuelve una conexión gestionada o una nueva que se cierra en otro lado.
+        }
+        return false; // Retornar false si no se encuentran o en caso de error no manejado antes.
+    }
 }
