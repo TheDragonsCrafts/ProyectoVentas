@@ -17,13 +17,26 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     // Acceso a datos
     private final AdministradorDatos datos = new AdministradorDatos();
     private Administrador adminAEditar;
+    private boolean editorPerdioRolMaestro = false;
+    private LoginFrame loginFrameInstancia; // Para notificar al LoginFrame original
 
     /**
-     * Creates new form CrearAdminFrame
+     * Creates new form CrearAdminFrame for initial master admin creation.
+     * @param loginFrame La instancia del LoginFrame que llama, para notificarle.
+     */
+    public CrearAdminFrame(LoginFrame loginFrame) {
+        this(); // Llama al constructor sin argumentos para initComponents y lógica común
+        this.loginFrameInstancia = loginFrame;
+        // La lógica de jCheckBoxAdminMaestro ya está en el constructor sin args.
+    }
+
+    /**
+     * Creates new form CrearAdminFrame for editing or creating subsequent admins.
      */
     public CrearAdminFrame() {
         initComponents();
         setLocationRelativeTo(null);
+        // this.loginFrameInstancia será null si se llama a este constructor.
 
         // Logic to handle 'Admin Maestro' checkbox based on existing master admin
         // This code should be in the constructor CrearAdminFrame()
@@ -41,9 +54,10 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }
 
     public CrearAdminFrame(Administrador admin) {
+        this(); // Llama al constructor sin argumentos para initComponents y lógica común
         this.adminAEditar = admin;
-        initComponents();
-        setLocationRelativeTo(null);
+        // initComponents(); Ya no es necesario aquí, se llama en this()
+        // setLocationRelativeTo(null); Ya no es necesario aquí, se llama en this()
         inicializarFormularioParaEdicion();
     }
 
@@ -305,9 +319,29 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Administrador creado con éxito",
                         "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                // Navegar a Login después de crear el admin (especialmente el maestro)
-                new LoginFrame().setVisible(true);
-                this.dispose();
+
+                if (this.loginFrameInstancia != null && !datos.existeAdminMaestro()) { // Doble check, aunque ya se sabe que es el primer admin
+                    // Esta condición es un poco redundante si jCheckBoxAdminMaestro estaba deshabilitado y seleccionado,
+                    // pero asegura que solo se notifique al LoginFrame original si es el primer admin maestro.
+                    // La lógica de !datos.existeAdminMaestro() antes de la inserción era más relevante.
+                    // Aquí, después de insertar, es más para confirmar que la instancia de loginFrameInstancia es válida.
+                }
+
+                // Si fue llamado desde LoginFrame para crear el primer admin, notificarlo.
+                // Y solo si es el primer admin maestro creado (esMaestro = true y antes no había ninguno).
+                boolean eraCreacionPrimerMaestro = esMaestro && (this.loginFrameInstancia != null);
+
+                if (eraCreacionPrimerMaestro) {
+                    this.loginFrameInstancia.primerAdminMaestroCreado();
+                } else {
+                    // Si es una creación normal (no el primer admin desde LoginFrame, o no es maestro),
+                    // o si fue llamado desde Gestion_Administradores, simplemente se cierra.
+                    // La lógica anterior de `new LoginFrame().setVisible(true)` se elimina para estos casos.
+                    // Si se crea un admin estándar desde Gestion_Administradores, simplemente se cierra y Gestion_Administradores refresca.
+                    // Si se crea un admin maestro desde Gestion_Administradores (y ya existe otro, lo cual está prevenido),
+                    // esa lógica de prevención ya actuó.
+                }
+                this.dispose(); // Siempre cerrar este frame
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
                         ex.getMessage(),
@@ -316,72 +350,112 @@ public class CrearAdminFrame extends javax.swing.JFrame {
             }
         } else {
             // ----- MODO EDICIÓN -----
-            // Validaciones para Edición
             if (usuario.isEmpty() || nombre.isEmpty() || correo.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Los campos Usuario, Nombre completo y Correo no pueden estar vacíos.",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Los campos Usuario, Nombre completo y Correo no pueden estar vacíos.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Validación de contraseña (solo si se intenta cambiar)
             if (!pass1.isEmpty() && !pass1.equals(pass2)) {
-                JOptionPane.showMessageDialog(this,
-                        "Las contraseñas no coinciden. Si no desea cambiar la contraseña, deje ambos campos vacíos.",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Las contraseñas no coinciden. Si no desea cambiar la contraseña, deje ambos campos vacíos.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             try {
-                // Admin Maestro Unicidad (en edición)
-                if (esMaestro && !this.adminAEditar.adminMaestro() && datos.existeAdminMaestro()) { // Intenta asignar rol Maestro a OTRO admin cuando ya existe un Maestro
-                    JOptionPane.showMessageDialog(this,
-                            "Ya existe un Administrador Maestro. No se puede asignar este rol a otro administrador.",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                int idEditor = seguridad.Session.getIdAdmin();
+                java.util.Optional<Administrador> optEditor = datos.buscarPorId(idEditor);
+                if (optEditor.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Error crítico: No se pudo encontrar al administrador que realiza la edición.", "Error Interno", JOptionPane.ERROR_MESSAGE);
                     return;
-                } else if (!esMaestro && this.adminAEditar.adminMaestro()) { // Intenta QUITAR rol Maestro al admin actual
-                    int numAdminsMaestros = datos.contarAdministradoresMaestros();
-                    int numAdminsActivos = datos.contarAdministradoresActivos(); // Podríamos querer solo activos que no sean el actual
+                }
+                Administrador editor = optEditor.get();
 
-                    if (numAdminsMaestros <= 1) { // Es el único admin maestro
-                        List<Administrador> otrosAdminsDisponibles = datos.listarTodos().stream()
-                                .filter(a -> a.id() != this.adminAEditar.id() && a.activo() && !a.adminMaestro())
-                                .toList();
+                // Caso 1: El editor es Admin Maestro y está intentando cambiar el rol de Admin Maestro.
+                if (editor.adminMaestro()) {
+                    // 1a: El editor (Admin Maestro) está editando a OTRO usuario y lo marca como Admin Maestro (Transferencia)
+                    if (esMaestro && adminAEditar.id() != editor.id() && !adminAEditar.adminMaestro()) {
+                        int confirm = JOptionPane.showConfirmDialog(this,
+                                "Está a punto de transferir su rol de Administrador Maestro a '" + adminAEditar.usuario() + "'.\n" +
+                                "Usted perderá su rol de Administrador Maestro y deberá iniciar sesión nuevamente.\n" +
+                                "¿Desea continuar?",
+                                "Confirmar Transferencia de Rol Maestro", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
-                        if (otrosAdminsDisponibles.isEmpty()) {
-                            JOptionPane.showMessageDialog(this,
-                                    "No se puede quitar el rol de Administrador Maestro porque no hay otros administradores activos a quien transferirlo.",
-                                    "Error", JOptionPane.ERROR_MESSAGE);
-                            jCheckBoxAdminMaestro.setSelected(true); // Revertir el cambio en la UI
-                            return;
+                        if (confirm == JOptionPane.YES_OPTION) {
+                            // Degradar al editor actual
+                            Administrador editorDegradado = new Administrador(
+                                    editor.id(), editor.usuario(), editor.hash(), editor.nombreCompleto(),
+                                    editor.correo(), editor.activo(), false // Quitar rol maestro al editor
+                            );
+                            if (!datos.actualizar(editorDegradado)) {
+                                JOptionPane.showMessageDialog(this, "Error al intentar degradar al actual Administrador Maestro.", "Error de Transferencia", JOptionPane.ERROR_MESSAGE);
+                                jCheckBoxAdminMaestro.setSelected(adminAEditar.adminMaestro()); // Revertir UI
+                                return;
+                            }
+                            this.editorPerdioRolMaestro = true; // Marcar que el editor perdió el rol
+                            // Promover al admin editado (adminAEditar ya tiene 'esMaestro = true' por el checkbox)
+                            // La actualización de adminAEditar se hará al final del método.
+                        } else {
+                            jCheckBoxAdminMaestro.setSelected(adminAEditar.adminMaestro()); // Revertir UI porque el usuario canceló
+                            return; // No continuar con el guardado
                         }
-
-                        // Solicitar la selección de un nuevo admin maestro
-                        Administrador[] posiblesNuevosMaestros = otrosAdminsDisponibles.toArray(new Administrador[0]);
-                        Administrador nuevoMaestroSeleccionado = (Administrador) JOptionPane.showInputDialog(
-                                this,
-                                "Debe transferir el rol de Administrador Maestro.\nSeleccione un nuevo Administrador Maestro:",
-                                "Transferir Rol Maestro",
-                                JOptionPane.QUESTION_MESSAGE,
-                                null,
-                                posiblesNuevosMaestros,
-                                posiblesNuevosMaestros[0]);
-
-                        if (nuevoMaestroSeleccionado == null) {
-                            JOptionPane.showMessageDialog(this, "Debe seleccionar un nuevo Administrador Maestro para poder quitar el rol al actual.", "Transferencia cancelada", JOptionPane.WARNING_MESSAGE);
-                            jCheckBoxAdminMaestro.setSelected(true); // Revertir
-                            return; // El usuario canceló la selección
-                        }
-                        // Actualizar el admin seleccionado para que sea el nuevo maestro
-                        Administrador adminActualizadoParaNuevoMaestro = new Administrador(
-                            nuevoMaestroSeleccionado.id(), nuevoMaestroSeleccionado.usuario(), nuevoMaestroSeleccionado.hash(),
-                            nuevoMaestroSeleccionado.nombreCompleto(), nuevoMaestroSeleccionado.correo(),
-                            nuevoMaestroSeleccionado.activo(), true // esAdminMaestro = true
-                        );
-                        datos.actualizar(adminActualizadoParaNuevoMaestro);
-                        // El admin actual (adminAEditar) perderá su rol de maestro más adelante en este mismo método.
                     }
-                    // Si hay otros admins maestros (numAdminsMaestros > 1), se permite quitar el rol sin transferir.
+                    // 1b: El editor (Admin Maestro) se está editando a SÍ MISMO e intenta DESMARCARSE como Admin Maestro
+                    else if (!esMaestro && adminAEditar.id() == editor.id()) {
+                        int numAdminsMaestros = datos.contarAdministradoresMaestros();
+                        if (numAdminsMaestros <= 1) { // Es el único admin maestro
+                            List<Administrador> otrosAdminsDisponibles = datos.listarTodos().stream()
+                                    .filter(a -> a.id() != editor.id() && a.activo()) // No necesita ser !adminMaestro, ya que se promoverá
+                                    .toList();
+
+                            if (otrosAdminsDisponibles.isEmpty()) {
+                                JOptionPane.showMessageDialog(this,
+                                        "No se puede quitar el rol de Administrador Maestro porque no hay otros administradores activos a quien transferirlo.",
+                                        "Error", JOptionPane.ERROR_MESSAGE);
+                                jCheckBoxAdminMaestro.setSelected(true); // Revertir el cambio en la UI
+                                return; // No continuar con el guardado
+                            }
+
+                            Administrador[] posiblesNuevosMaestros = otrosAdminsDisponibles.toArray(new Administrador[0]);
+                            Administrador nuevoMaestroSeleccionado = (Administrador) JOptionPane.showInputDialog(
+                                    this,
+                                    "Debe transferir el rol de Administrador Maestro.\nSeleccione un nuevo Administrador Maestro:",
+                                    "Transferir Rol Maestro",
+                                    JOptionPane.QUESTION_MESSAGE, null,
+                                    posiblesNuevosMaestros, posiblesNuevosMaestros[0]);
+
+                            if (nuevoMaestroSeleccionado == null) {
+                                JOptionPane.showMessageDialog(this, "Debe seleccionar un nuevo Administrador Maestro para poder quitar el rol al actual.", "Transferencia cancelada", JOptionPane.WARNING_MESSAGE);
+                                jCheckBoxAdminMaestro.setSelected(true); // Revertir
+                                return; // Usuario canceló
+                            }
+
+                            // Promover al nuevo maestro seleccionado
+                            Administrador adminPromovido = new Administrador(
+                                    nuevoMaestroSeleccionado.id(), nuevoMaestroSeleccionado.usuario(), nuevoMaestroSeleccionado.hash(),
+                                    nuevoMaestroSeleccionado.nombreCompleto(), nuevoMaestroSeleccionado.correo(),
+                                    nuevoMaestroSeleccionado.activo(), true);
+                            if (!datos.actualizar(adminPromovido)) {
+                                JOptionPane.showMessageDialog(this, "Error al promover al nuevo Administrador Maestro.", "Error de Transferencia", JOptionPane.ERROR_MESSAGE);
+                                jCheckBoxAdminMaestro.setSelected(true); // Revertir
+                                return;
+                            }
+                            // El admin actual (editor) se degradará porque 'esMaestro' (del checkbox) es false.
+                        }
+                        // Si hay otros admins maestros (numAdminsMaestros > 1), se permite quitar el rol sin transferir.
+                    }
+                }
+                // Caso 2: Se intenta marcar a un usuario como Admin Maestro cuando ya existe uno y no es una transferencia por el Admin Maestro actual.
+                else if (esMaestro && !adminAEditar.adminMaestro() && datos.existeAdminMaestro()) {
+                     // Esta condición previene que un admin estándar intente crear un segundo admin maestro,
+                     // o que un admin maestro intente crear un segundo admin maestro sin pasar por el flujo de transferencia.
+                     // La lógica de transferencia (1a) ya maneja el caso de un admin maestro transfiriendo su rol.
+                     // Si el editor no es maestro, no puede designar a otro como maestro si ya existe uno.
+                    if (!editor.adminMaestro() || (editor.adminMaestro() && adminAEditar.id() == editor.id() && !esMaestro /*se está desmarcando a sí mismo y ya fue manejado en 1b*/)) {
+                         JOptionPane.showMessageDialog(this,
+                            "Ya existe un Administrador Maestro. No se puede asignar este rol a otro administrador a menos que el actual Administrador Maestro transfiera el rol.",
+                            "Error de Unicidad", JOptionPane.ERROR_MESSAGE);
+                        jCheckBoxAdminMaestro.setSelected(adminAEditar.adminMaestro()); // Revertir UI
+                        return;
+                    }
                 }
 
 
@@ -410,11 +484,18 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                         this.adminAEditar.activo(), // Mantener estado de actividad
                         esMaestro);
 
-                datos.actualizar(adminActualizado);
-                JOptionPane.showMessageDialog(this,
-                        "Administrador actualizado con éxito",
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                this.dispose();
+                boolean operacionExitosa = datos.actualizar(adminActualizado);
+
+                if (operacionExitosa) {
+                    JOptionPane.showMessageDialog(this,
+                            "Administrador actualizado con éxito",
+                            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    this.dispose(); // Se cierra el frame. La redirección al login si es necesaria se manejará en Gestion_Administradores o Menu_Principal
+                } else {
+                     JOptionPane.showMessageDialog(this,
+                            "No se pudo actualizar el administrador.",
+                            "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                }
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
@@ -426,7 +507,7 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     }
 
     private void jButtonCancelarActionPerformed(java.awt.event.ActionEvent evt) {
-        new LoginFrame().setVisible(true); 
+        // Simplemente cierra este frame. La ventana anterior (Gestion_Administradores o LoginFrame) permanecerá.
         this.dispose();
     }
 
@@ -468,5 +549,9 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     private javax.swing.JTextField txtNombre;
     private javax.swing.JTextField txtUsuario;
     // End of variables declaration//GEN-END:variables
+
+    public boolean editorPerdioRolMaestro() {
+        return this.editorPerdioRolMaestro;
+    }
 }
 
