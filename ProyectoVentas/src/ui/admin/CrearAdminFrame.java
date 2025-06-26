@@ -332,12 +332,56 @@ public class CrearAdminFrame extends javax.swing.JFrame {
 
             try {
                 // Admin Maestro Unicidad (en edición)
-                if (esMaestro && !this.adminAEditar.adminMaestro() && datos.existeAdminMaestro()) {
+                if (esMaestro && !this.adminAEditar.adminMaestro() && datos.existeAdminMaestro()) { // Intenta asignar rol Maestro a OTRO admin cuando ya existe un Maestro
                     JOptionPane.showMessageDialog(this,
                             "Ya existe un Administrador Maestro. No se puede asignar este rol a otro administrador.",
                             "Error", JOptionPane.ERROR_MESSAGE);
                     return;
+                } else if (!esMaestro && this.adminAEditar.adminMaestro()) { // Intenta QUITAR rol Maestro al admin actual
+                    int numAdminsMaestros = datos.contarAdministradoresMaestros();
+                    int numAdminsActivos = datos.contarAdministradoresActivos(); // Podríamos querer solo activos que no sean el actual
+
+                    if (numAdminsMaestros <= 1) { // Es el único admin maestro
+                        List<Administrador> otrosAdminsDisponibles = datos.listarTodos().stream()
+                                .filter(a -> a.id() != this.adminAEditar.id() && a.activo() && !a.adminMaestro())
+                                .toList();
+
+                        if (otrosAdminsDisponibles.isEmpty()) {
+                            JOptionPane.showMessageDialog(this,
+                                    "No se puede quitar el rol de Administrador Maestro porque no hay otros administradores activos a quien transferirlo.",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            jCheckBoxAdminMaestro.setSelected(true); // Revertir el cambio en la UI
+                            return;
+                        }
+
+                        // Solicitar la selección de un nuevo admin maestro
+                        Administrador[] posiblesNuevosMaestros = otrosAdminsDisponibles.toArray(new Administrador[0]);
+                        Administrador nuevoMaestroSeleccionado = (Administrador) JOptionPane.showInputDialog(
+                                this,
+                                "Debe transferir el rol de Administrador Maestro.\nSeleccione un nuevo Administrador Maestro:",
+                                "Transferir Rol Maestro",
+                                JOptionPane.QUESTION_MESSAGE,
+                                null,
+                                posiblesNuevosMaestros,
+                                posiblesNuevosMaestros[0]);
+
+                        if (nuevoMaestroSeleccionado == null) {
+                            JOptionPane.showMessageDialog(this, "Debe seleccionar un nuevo Administrador Maestro para poder quitar el rol al actual.", "Transferencia cancelada", JOptionPane.WARNING_MESSAGE);
+                            jCheckBoxAdminMaestro.setSelected(true); // Revertir
+                            return; // El usuario canceló la selección
+                        }
+                        // Actualizar el admin seleccionado para que sea el nuevo maestro
+                        Administrador adminActualizadoParaNuevoMaestro = new Administrador(
+                            nuevoMaestroSeleccionado.id(), nuevoMaestroSeleccionado.usuario(), nuevoMaestroSeleccionado.hash(),
+                            nuevoMaestroSeleccionado.nombreCompleto(), nuevoMaestroSeleccionado.correo(),
+                            nuevoMaestroSeleccionado.activo(), true // esAdminMaestro = true
+                        );
+                        datos.actualizar(adminActualizadoParaNuevoMaestro);
+                        // El admin actual (adminAEditar) perderá su rol de maestro más adelante en este mismo método.
+                    }
+                    // Si hay otros admins maestros (numAdminsMaestros > 1), se permite quitar el rol sin transferir.
                 }
+
 
                 // Usuario único (en edición, si cambió el usuario)
                 if (!usuario.equals(this.adminAEditar.usuario()) && datos.buscarPorUsuario(usuario).isPresent()) {
