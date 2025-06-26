@@ -305,6 +305,8 @@ public class CrearAdminFrame extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Administrador creado con éxito",
                         "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                // Navegar a Login después de crear el admin (especialmente el maestro)
+                new LoginFrame().setVisible(true);
                 this.dispose();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
