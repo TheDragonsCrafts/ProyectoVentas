@@ -280,7 +280,7 @@ public class Gestion_Administradores extends javax.swing.JFrame {
                     }
 
                     Administrador[] posiblesNuevosMaestros = otrosAdmins.toArray(new Administrador[0]);
-                    Administrador nuevoMaestro = (Administrador) JOptionPane.showInputDialog(
+                    Administrador nuevoMaestroSeleccionado = (Administrador) JOptionPane.showInputDialog(
                             this,
                             "Debe transferir el rol de Administrador Maestro.\nSeleccione un nuevo Administrador Maestro:",
                             "Transferir Rol Maestro",
@@ -290,26 +290,80 @@ public class Gestion_Administradores extends javax.swing.JFrame {
                             posiblesNuevosMaestros[0]
                     );
 
-                    if (nuevoMaestro == null) {
+                    if (nuevoMaestroSeleccionado == null) {
                         JOptionPane.showMessageDialog(this, "Debe seleccionar un nuevo Administrador Maestro para poder eliminar al actual.", "Transferencia cancelada", JOptionPane.WARNING_MESSAGE);
                         return; // El usuario canceló la selección
                     }
 
-                    // Actualizar el nuevo admin maestro
-                    Administrador adminActualizado = new Administrador(
-                        nuevoMaestro.id(), nuevoMaestro.usuario(), nuevoMaestro.hash(),
-                        nuevoMaestro.nombreCompleto(), nuevoMaestro.correo(),
-                        nuevoMaestro.activo(), true // esAdminMaestro = true
+                    // Obtener el administrador actual que se va a eliminar y dejará de ser maestro
+                    java.util.Optional<Administrador> adminActualOpt = adminDatos.buscarPorId(adminId);
+                    if (adminActualOpt.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, "No se encontró el administrador maestro actual en la base de datos.", "Error Interno", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    Administrador adminActual = adminActualOpt.get();
+
+                    // 1. Degradar al administrador actual (quitarle el rol de maestro)
+                    Administrador adminActualDegradado = new Administrador(
+                            adminActual.id(), adminActual.usuario(), adminActual.hash(),
+                            adminActual.nombreCompleto(), adminActual.correo(),
+                            adminActual.activo(), false // esAdminMaestro = false
                     );
-                    adminDatos.actualizar(adminActualizado);
+                    boolean degradacionExitosa = adminDatos.actualizar(adminActualDegradado);
+                    if (!degradacionExitosa) {
+                        JOptionPane.showMessageDialog(this, "Error al degradar al actual Administrador Maestro.", "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    // 2. Promover al nuevo administrador maestro
+                    Administrador nuevoMaestroPromovido = new Administrador(
+                            nuevoMaestroSeleccionado.id(), nuevoMaestroSeleccionado.usuario(), nuevoMaestroSeleccionado.hash(),
+                            nuevoMaestroSeleccionado.nombreCompleto(), nuevoMaestroSeleccionado.correo(),
+                            nuevoMaestroSeleccionado.activo(), true // esAdminMaestro = true
+                    );
+                    boolean promocionExitosa = adminDatos.actualizar(nuevoMaestroPromovido);
+                    if (!promocionExitosa) {
+                        // Intentar revertir la degradación si la promoción falla
+                        adminDatos.actualizar(new Administrador(
+                                adminActual.id(), adminActual.usuario(), adminActual.hash(),
+                                adminActual.nombreCompleto(), adminActual.correo(),
+                                adminActual.activo(), true // Revertir a esAdminMaestro = true
+                        ));
+                        JOptionPane.showMessageDialog(this, "Error al promover al nuevo Administrador Maestro. Se ha intentado revertir la degradación del anterior.", "Error de Actualización", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    // Actualizar la variable esAdminMaestro a false para el admin que se va a eliminar,
+                    // ya que el rol ha sido transferido.
+                    esAdminMaestro = false;
                 }
             }
 
+
+            // Si el administrador es maestro y es el único activo, ya se habrá bloqueado la eliminación antes.
+            // Si era maestro y el rol se transfirió, esAdminMaestro ahora es false.
+            // Si no era maestro, esAdminMaestro ya era false.
+            // Por lo tanto, aquí no necesitamos verificar esAdminMaestro para la confirmación de eliminación.
 
             String mensajeConfirmacion = String.format("¿Está seguro de que desea eliminar al administrador '%s'? Esta acción no se puede deshacer.", nombreUsuario);
             int confirmacion = JOptionPane.showConfirmDialog(this, mensajeConfirmacion, "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
             if (confirmacion == JOptionPane.YES_OPTION) {
+                // Verificar si el administrador tiene ventas asociadas ANTES de intentar eliminar
+                datos.VentaDatos ventaDatos = new datos.VentaDatos();
+                boolean tieneVentas = false;
+                try {
+                    tieneVentas = ventaDatos.existenVentasParaAdministrador(adminId);
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(this, "Error al verificar las ventas del administrador: " + e.getMessage(), "Error de Verificación", JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                    return; // No proceder si hay error verificando ventas
+                }
+
+                if (tieneVentas) {
+                    JOptionPane.showMessageDialog(this, "El administrador '" + nombreUsuario + "' no puede ser eliminado porque tiene ventas asociadas.", "Eliminación no permitida", JOptionPane.ERROR_MESSAGE);
+                    return; // No proceder con la eliminación
+                }
+
                 boolean exito = adminDatos.eliminar(adminId);
 
                 if (exito) {
