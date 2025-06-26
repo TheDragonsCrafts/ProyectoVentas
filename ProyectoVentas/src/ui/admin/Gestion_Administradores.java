@@ -420,6 +420,15 @@ public class Gestion_Administradores extends javax.swing.JFrame {
                     @Override
                     public void windowClosed(WindowEvent e) {
                         cargarAdministradores(); // Refresh table after edit frame is closed
+                        if (editarFrame.editorPerdioRolMaestro()) {
+                            // El editor (usuario actual) ya no es Admin Maestro.
+                            // Cerrar esta ventana y mostrar el login.
+                            JOptionPane.showMessageDialog(Gestion_Administradores.this,
+                                    "Su rol de Administrador Maestro ha sido transferido.\nDebe iniciar sesión nuevamente.",
+                                    "Rol Transferido", JOptionPane.INFORMATION_MESSAGE);
+                            new LoginFrame().setVisible(true);
+                            Gestion_Administradores.this.dispose();
+                        }
                     }
                 });
                 editarFrame.setVisible(true);
@@ -439,6 +448,17 @@ public class Gestion_Administradores extends javax.swing.JFrame {
             @Override
             public void windowClosed(WindowEvent e) {
                 cargarAdministradores();
+                // Aunque editorPerdioRolMaestro es principalmente para el flujo de edición,
+                // lo mantenemos aquí por consistencia estructural del listener.
+                // En la práctica, no se espera que sea true en el flujo de nueva creación
+                // según la lógica actual de CrearAdminFrame.
+                if (crearAdminFrame.editorPerdioRolMaestro()) {
+                    JOptionPane.showMessageDialog(Gestion_Administradores.this,
+                            "Su rol de Administrador Maestro ha sido afectado.\nDebe iniciar sesión nuevamente.",
+                            "Rol Modificado", JOptionPane.INFORMATION_MESSAGE);
+                    new LoginFrame().setVisible(true);
+                    Gestion_Administradores.this.dispose();
+                }
             }
         });
         crearAdminFrame.setVisible(true);
