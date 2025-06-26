@@ -107,6 +107,10 @@ public class AdministradorDatos {
     }
 
     public boolean eliminar(int idAdministrador) {
+        // La lógica para prevenir la eliminación del último admin maestro
+        // se manejará principalmente en la capa de UI o servicio,
+        // pero podríamos añadir una comprobación aquí si fuera estrictamente necesario
+        // por reglas de negocio a nivel de datos. Por ahora, se mantiene simple.
         String sql = "DELETE FROM administradores WHERE id_administrador = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
             ps.setInt(1, idAdministrador);
@@ -114,10 +118,47 @@ public class AdministradorDatos {
             return affectedRows > 0;
         } catch (SQLException e) {
             e.printStackTrace(); // Consider logging
-            // Check for foreign key constraint violation if needed, though for admins it might be less common
-            // if (e.getSQLState().equals("23000")) { /* foreign key violation */ }
             return false;
         }
+    }
+
+    public Optional<Administrador> obtenerAdminMaestro() {
+        String sql = "SELECT * FROM administradores WHERE es_admin_maestro = 1 LIMIT 1";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return Optional.of(mapear(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
+        }
+        return Optional.empty();
+    }
+
+    public int contarAdministradoresMaestros() {
+        String sql = "SELECT COUNT(*) FROM administradores WHERE es_admin_maestro = 1";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
+        }
+        return 0;
+    }
+
+    public int contarAdministradoresActivos() {
+        String sql = "SELECT COUNT(*) FROM administradores WHERE activo = 1";
+        try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Consider logging
+        }
+        return 0;
     }
 
     public List<Administrador> listarTodos() {
