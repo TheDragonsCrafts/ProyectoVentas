@@ -20,5 +20,15 @@ public record Administrador(
     public String getUsuario() {
         return this.usuario;
     }
+
+    /**
+     * Devuelve el nombre completo del administrador para ser usado en
+     * componentes de UI como JComboBox o JList.
+     * @return El nombre completo del administrador.
+     */
+    @Override
+    public String toString() {
+        return this.nombreCompleto;
+    }
 }
 
