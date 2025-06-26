@@ -11,6 +11,7 @@ public class LoginFrame extends javax.swing.JFrame {
 
     // Servicio de login (campo manual, fuera de los guarded blocks)
     private final ServicioLogin servicioLogin = new ServicioLogin();
+    private int intentosFallidos = 0; // Contador de intentos fallidos
 
     public LoginFrame() {
         initComponents();
@@ -174,10 +175,19 @@ buttonPanel.setOpaque(false);
             this.dispose();
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                ex.getMessage(),
-                "Error al iniciar sesión",
-                JOptionPane.ERROR_MESSAGE);
+            intentosFallidos++;
+            if (intentosFallidos >= 5) {
+                JOptionPane.showMessageDialog(this,
+                    "Ha superado el número máximo de intentos de inicio de sesión.",
+                    "Límite de intentos excedido",
+                    JOptionPane.ERROR_MESSAGE);
+                System.exit(0); // Cierra la aplicación
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    ex.getMessage() + "\nIntentos restantes: " + (5 - intentosFallidos),
+                    "Error al iniciar sesión",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }                                                
 
