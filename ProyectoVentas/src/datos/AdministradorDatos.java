@@ -212,6 +212,34 @@ public class AdministradorDatos {
         }
     }
 
+    /**
+     * Actualiza la contraseña de un administrador si el nombre de usuario y correo coinciden.
+     * @param nombreUsuario El nombre de usuario del administrador.
+     * @param correo El correo electrónico del administrador.
+     * @param nuevaContrasena La nueva contraseña en texto plano.
+     * @return true si la contraseña fue actualizada, false en caso contrario.
+     */
+    public boolean actualizarContrasenaPorUsuarioYCorreo(String nombreUsuario, String correo, String nuevaContrasena) {
+        Optional<Administrador> adminOpt = buscarPorUsuario(nombreUsuario);
+        if (adminOpt.isPresent()) {
+            Administrador admin = adminOpt.get();
+            if (admin.correo().equalsIgnoreCase(correo)) {
+                String nuevoHash = seguridad.UtilHash.hash(nuevaContrasena);
+                String sql = "UPDATE administradores SET hash_contraseña = ? WHERE id_administrador = ?";
+                try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
+                    ps.setString(1, nuevoHash);
+                    ps.setInt(2, admin.id());
+                    int filasAfectadas = ps.executeUpdate();
+                    return filasAfectadas > 0;
+                } catch (SQLException e) {
+                    e.printStackTrace(); // Consider logging
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
     /* ==== Helper ==== */
     private Administrador mapear(ResultSet r) throws SQLException {
         return new Administrador(

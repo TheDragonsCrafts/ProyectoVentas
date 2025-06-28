@@ -29,8 +29,7 @@ Para que el agente pueda compilar y ejecutar el proyecto, se deben cumplir los s
     user=root
     password=
     ```
-4.  **IDE (Recomendado):** El proyecto está configurado como un proyecto de NetBeans. Abrirlo en NetBeans es la forma más directa de trabajar, ya que gestionará la compilación y ejecución a través de Ant automáticamente.
-5.  **Compilación:** El comando `ant jar` (ejecutado en el directorio `ProyectoVentas/`) compilará el código y creará un JAR en el directorio `dist/`.
+4.  **Compilación:** El comando `ant jar` (ejecutado en el directorio `ProyectoVentas/`) compilará el código y creará un JAR en el directorio `dist/`.
 
 ## 4. Arquitectura Detallada y Estructura de Paquetes
 
@@ -91,6 +90,22 @@ El sistema sigue una arquitectura de 3 capas (Presentación, Lógica de Negocio,
 5.  **Transacción:** `VentaDatos.registrarVenta()` es transaccional. Inserta un registro en la tabla `ventas` y luego inserta todos los detalles en `detalles_venta`. Si algo falla, hace un `rollback`.
 
 ## 6. Guía para el Agente (Cómo modificar el código)
+
+### Compilación y Pruebas (Línea de Comandos)
+
+Dado que el agente opera en un entorno sin GUI, las pruebas y la verificación deben realizarse a través de la línea de comandos.
+
+1.  **Compilar el Proyecto:**
+    -   Después de realizar cualquier cambio en los archivos `.java`, es **obligatorio** recompilar el proyecto para asegurar que no se hayan introducido errores de sintaxis o compilación.
+    -   Navega al directorio `ProyectoVentas/` y ejecuta el siguiente comando:
+        ```bash
+        ant jar
+        ```
+    -   Este comando limpiará las compilaciones anteriores, compilará todo el código fuente y empaquetará la aplicación en un archivo JAR ejecutable ubicado en `ProyectoVentas/dist/ProyectoVentas.jar`.
+
+2.  **Verificar Cambios:**
+    -   Una compilación exitosa es la principal forma de verificar que los cambios son sintácticamente correctos.
+    -   Si el comando `ant jar` falla, el agente debe analizar la salida del error para identificar y corregir el problema en el código fuente o usar otro comando de compilación según sea conveniente.
 
 ### Tarea: Añadir una nueva funcionalidad (Ej: "Cancelar Venta")
 
