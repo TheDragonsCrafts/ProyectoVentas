@@ -22,11 +22,13 @@ public class LoginFrame extends javax.swing.JFrame {
         if (!adminDatos.existeAdminMaestro()) {
             BtnCrearAdmin.setVisible(true);
             btnIniciarSesion.setVisible(false);
+            btnOlvidastelacontrasena.setVisible(false); // Ocultar si no hay admin maestro
             // It's also a good idea to ensure CrearAdminFrame sets the 'Admin Maestro' checkbox
             // if no master admin exists, but that will be handled in CrearAdminFrame.java
         } else {
             BtnCrearAdmin.setVisible(false);
             btnIniciarSesion.setVisible(true);
+            btnOlvidastelacontrasena.setVisible(true); // Mostrar si hay admin maestro
         }
     }
 
@@ -225,9 +227,11 @@ public class LoginFrame extends javax.swing.JFrame {
                     if (!adminDatosCheck.existeAdminMaestro()) {
                         BtnCrearAdmin.setVisible(true);
                         btnIniciarSesion.setVisible(false);
+                        btnOlvidastelacontrasena.setVisible(false);
                     } else {
                         BtnCrearAdmin.setVisible(false);
                         btnIniciarSesion.setVisible(true);
+                        btnOlvidastelacontrasena.setVisible(true);
                     }
                 }
                 // Si primerAdminFueCreadoExitosamente es true, este LoginFrame ya se habrá cerrado
@@ -240,7 +244,8 @@ public class LoginFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_BtnCrearAdminActionPerformed
 
     private void btnOlvidastelacontrasenaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOlvidastelacontrasenaActionPerformed
-        // TODO add your handling code here:
+        new RecuperarContrasenaFrame().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_btnOlvidastelacontrasenaActionPerformed
 
     /**

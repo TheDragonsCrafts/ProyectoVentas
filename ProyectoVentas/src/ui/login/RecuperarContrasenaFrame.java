@@ -177,7 +177,25 @@ public class RecuperarContrasenaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jPasswordField1ActionPerformed
 
     private void btnCambiarContrasenaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCambiarContrasenaActionPerformed
-        // TODO add your handling code here:
+        String usuario = UsuarioTextField1.getText().trim();
+        String correo = CorreoTextField.getText().trim();
+        String nuevaContrasena = new String(jPasswordField1.getPassword());
+
+        if (usuario.isEmpty() || correo.isEmpty() || nuevaContrasena.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        datos.AdministradorDatos adminDatos = new datos.AdministradorDatos();
+        boolean actualizado = adminDatos.actualizarContrasenaPorUsuarioYCorreo(usuario, correo, nuevaContrasena);
+
+        if (actualizado) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Contraseña actualizada exitosamente.", "Éxito", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            new LoginFrame().setVisible(true);
+            this.dispose();
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "No se pudo actualizar la contraseña. Verifique el usuario y el correo.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnCambiarContrasenaActionPerformed
 
     private void UsuarioTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UsuarioTextField1ActionPerformed
@@ -185,7 +203,8 @@ public class RecuperarContrasenaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_UsuarioTextField1ActionPerformed
 
     private void btnIniciarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIniciarSesionActionPerformed
-        // TODO add your handling code here:
+        new LoginFrame().setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_btnIniciarSesionActionPerformed
 
     /**
