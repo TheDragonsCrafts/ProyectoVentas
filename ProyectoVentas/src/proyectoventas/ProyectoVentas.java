@@ -6,8 +6,13 @@ import ui.login.LoginFrame;
 
 public class ProyectoVentas {
 
+    /**
+     * Punto de entrada principal de la aplicación.
+     * Configura el Look and Feel de la interfaz gráfica e inicia la ventana de login.
+     * @param args Argumentos de línea de comandos (no utilizados).
+     */
     public static void main(String[] args) {
-        // 1. Fijar Look & Feel Nimbus (o el que prefieras)
+        // Intenta establecer el Look and Feel Nimbus para una apariencia moderna.
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -17,10 +22,12 @@ public class ProyectoVentas {
             }
         } catch (ClassNotFoundException | InstantiationException 
                  | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            // Si Nimbus no está disponible, continúa con el L&F por defecto
+            // Si Nimbus no está disponible o falla, se usará el L&F por defecto de Swing.
+            // Se podría loguear este error si fuera necesario.
+            System.err.println("Nimbus L&F no encontrado o no se pudo aplicar: " + ex.getMessage());
         }
 
-        // 2. Arrancar GUI en el hilo de Swing
+        // Inicia la interfaz gráfica en el Event Dispatch Thread (EDT) de Swing.
         java.awt.EventQueue.invokeLater(() -> {
             new LoginFrame().setVisible(true);
         });

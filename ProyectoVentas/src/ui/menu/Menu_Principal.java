@@ -12,34 +12,38 @@ import ui.admin.Gestion_Administradores;
 import ui.reportes.Historial_Ventas;
 
 /**
- * Menu principal de la aplicación.
- * Sólo implementa por ahora: Nueva venta, Inventario y Cerrar sesión.
- * Los demás botones quedan sin acción hasta que estén disponibles.
- * @author Liliana
+ * JFrame que representa el menú principal de la aplicación.
+ * Proporciona acceso a las diferentes funcionalidades del sistema,
+ * como ventas, inventario, gestión de usuarios y reportes.
+ * La visibilidad de ciertas opciones (ej. Administrar Usuarios)
+ * puede depender del rol del usuario actual.
  */
 public class Menu_Principal extends javax.swing.JFrame {
 
     /**
-     * Creates new form Menu_Principal
+     * Constructor. Inicializa componentes, centra la ventana y ajusta
+     * la habilitación del botón de administrar usuarios según el rol del admin actual.
      */
     public Menu_Principal() {
         initComponents();
-        // Centro la ventana
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null); // Centrar la ventana
 
-        // Determine if the current user is a master admin to enable/disable user management button
+        // Habilitar/deshabilitar botón de gestión de administradores
+        // basado en si el usuario actual es un administrador maestro.
         AdministradorDatos adminDatos = new AdministradorDatos();
-        int currentAdminId = Session.getIdAdmin();
+        int currentAdminId = Session.getIdAdmin(); // Asume que Session.getIdAdmin() devuelve el ID del admin logueado.
         Optional<Administrador> currentAdminOpt = adminDatos.buscarPorId(currentAdminId);
 
         if (currentAdminOpt.isPresent() && currentAdminOpt.get().adminMaestro()) {
             BtnAdministrarUsuariosAdmins.setEnabled(true);
         } else {
             BtnAdministrarUsuariosAdmins.setEnabled(false);
+            BtnAdministrarUsuariosAdmins.setToolTipText("Solo administradores maestros pueden gestionar usuarios.");
         }
     }
 
     @SuppressWarnings("unchecked")
+    // Los comentarios de NetBeans para initComponents y variables se omiten por brevedad.
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -53,15 +57,20 @@ public class Menu_Principal extends javax.swing.JFrame {
         BtnInventario = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Menú Principal - Sistema de Ventas"); // Título de la ventana
 
         jPanel1.setBackground(new java.awt.Color(51, 102, 255));
 
         jLabel1.setFont(new java.awt.Font("Segoe UI Emoji", 0, 36)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255)); // Color de texto para contraste
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER); // Centrar texto
         jLabel1.setText("Bienvenido");
 
         BtnVenta.setBackground(new java.awt.Color(0, 0, 0));
+        BtnVenta.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnVenta.setForeground(new java.awt.Color(255, 255, 255));
-        BtnVenta.setText("Nueva venta");
+        BtnVenta.setText("Nueva Venta"); // Texto más descriptivo
+        BtnVenta.setToolTipText("Iniciar una nueva transacción de venta.");
         BtnVenta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnVentaActionPerformed(evt);
@@ -69,8 +78,10 @@ public class Menu_Principal extends javax.swing.JFrame {
         });
 
         BtnAdministrarUsuariosAdmins.setBackground(new java.awt.Color(0, 0, 0));
+        BtnAdministrarUsuariosAdmins.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnAdministrarUsuariosAdmins.setForeground(new java.awt.Color(255, 255, 255));
         BtnAdministrarUsuariosAdmins.setText("Administrar Usuarios");
+        BtnAdministrarUsuariosAdmins.setToolTipText("Gestionar cuentas de administradores (solo para Admin Maestro).");
         BtnAdministrarUsuariosAdmins.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnAdministrarUsuariosAdminsActionPerformed(evt);
@@ -78,17 +89,21 @@ public class Menu_Principal extends javax.swing.JFrame {
         });
 
         BtnAltaYBaja.setBackground(new java.awt.Color(0, 0, 0));
+        BtnAltaYBaja.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnAltaYBaja.setForeground(new java.awt.Color(255, 255, 255));
-        BtnAltaYBaja.setText("Agregar/eliminar Productos");
+        BtnAltaYBaja.setText("Gestión de Productos"); // Texto más descriptivo
+        BtnAltaYBaja.setToolTipText("Agregar, eliminar o modificar productos del inventario.");
         BtnAltaYBaja.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnAltaYBajaActionPerformed(evt);
             }
         });
 
-        BtnCerrarSesion.setBackground(new java.awt.Color(0, 0, 0));
+        BtnCerrarSesion.setBackground(new java.awt.Color(204, 0, 51)); // Color distintivo para cerrar sesión
+        BtnCerrarSesion.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnCerrarSesion.setForeground(new java.awt.Color(255, 255, 255));
-        BtnCerrarSesion.setText("Cerrar Sesion");
+        BtnCerrarSesion.setText("Cerrar Sesión"); // Texto más descriptivo
+        BtnCerrarSesion.setToolTipText("Finalizar la sesión actual y volver a la pantalla de login.");
         BtnCerrarSesion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnCerrarSesionActionPerformed(evt);
@@ -96,8 +111,10 @@ public class Menu_Principal extends javax.swing.JFrame {
         });
 
         BtnHistorial.setBackground(new java.awt.Color(0, 0, 0));
+        BtnHistorial.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnHistorial.setForeground(new java.awt.Color(255, 255, 255));
         BtnHistorial.setText("Historial de Ventas");
+        BtnHistorial.setToolTipText("Consultar el registro de todas las ventas realizadas.");
         BtnHistorial.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnHistorialActionPerformed(evt);
@@ -105,8 +122,10 @@ public class Menu_Principal extends javax.swing.JFrame {
         });
 
         BtnInventario.setBackground(new java.awt.Color(0, 0, 0));
+        BtnInventario.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // Fuente ajustada
         BtnInventario.setForeground(new java.awt.Color(255, 255, 255));
-        BtnInventario.setText("Inventario");
+        BtnInventario.setText("Ver Inventario"); // Texto más descriptivo
+        BtnInventario.setToolTipText("Consultar el estado actual del inventario de productos.");
         BtnInventario.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnInventarioActionPerformed(evt);
@@ -125,16 +144,16 @@ public class Menu_Principal extends javax.swing.JFrame {
                         .addGap(75, 75, 75)
                         .addComponent(BtnAdministrarUsuariosAdmins, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(367, 367, 367)
-                        .addComponent(jLabel1))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(297, 297, 297)
                         .addComponent(BtnHistorial, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(92, 92, 92)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(BtnAltaYBaja, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(BtnInventario, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(46, 183, Short.MAX_VALUE))
+                            .addComponent(BtnInventario, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 920, Short.MAX_VALUE)))
+                .addGap(46, 46, 46))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
                     .addGap(33, 33, 33)
@@ -177,62 +196,73 @@ public class Menu_Principal extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    // Abre el formulario de nueva venta y cierra este
-    private void BtnVentaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnVentaActionPerformed
+    /**
+     * Acción para el botón "Nueva Venta". Abre el frame de Venta.
+     */
+    private void BtnVentaActionPerformed(java.awt.event.ActionEvent evt) {
         new Venta().setVisible(true);
         this.dispose();
-    }//GEN-LAST:event_BtnVentaActionPerformed
+    }
 
-    // Abre el inventario y cierra este
-    private void BtnInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnInventarioActionPerformed
+    /**
+     * Acción para el botón "Inventario". Abre el frame de Inventario.
+     */
+    private void BtnInventarioActionPerformed(java.awt.event.ActionEvent evt) {
         new Inventario().setVisible(true);
         this.dispose();
-    }//GEN-LAST:event_BtnInventarioActionPerformed
+    }
 
-    // Vuelve al login
-    private void BtnCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCerrarSesionActionPerformed
+    /**
+     * Acción para el botón "Cerrar Sesión". Vuelve al LoginFrame.
+     */
+    private void BtnCerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {
         new LoginFrame().setVisible(true);
         this.dispose();
-    }//GEN-LAST:event_BtnCerrarSesionActionPerformed
+    }
 
-    private void BtnAltaYBajaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnAltaYBajaActionPerformed
+    /**
+     * Acción para el botón "Alta y Baja de Productos". Abre el frame correspondiente.
+     */
+    private void BtnAltaYBajaActionPerformed(java.awt.event.ActionEvent evt) {
         new AltaYBaja().setVisible(true);
         this.dispose();
-    }//GEN-LAST:event_BtnAltaYBajaActionPerformed
+    }
 
+    /**
+     * Acción para el botón "Administrar Usuarios". Abre el frame de gestión de administradores.
+     */
     private void BtnAdministrarUsuariosAdminsActionPerformed(java.awt.event.ActionEvent evt) {
         new Gestion_Administradores().setVisible(true);
         this.dispose();
     }
 
+    /**
+     * Acción para el botón "Historial de Ventas". Abre el frame correspondiente.
+     */
     private void BtnHistorialActionPerformed(java.awt.event.ActionEvent evt) {
         new Historial_Ventas().setVisible(true);
         this.dispose();
     }
 
     /**
-     * @param args the command line arguments
+     * Método main para pruebas (opcional).
      */
     public static void main(String args[]) {
-        /* Look & Feel Nimbus */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code ">
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info :
-                 javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
         } catch (Exception ex) {
-            // Si Nimbus no está disponible, usa el L&F por defecto
+            java.util.logging.Logger.getLogger(Menu_Principal.class.getName()).log(java.util.logging.Level.INFO, "Nimbus L&F no disponible.", ex);
         }
-        //</editor-fold>
 
         java.awt.EventQueue.invokeLater(() -> new Menu_Principal().setVisible(true));
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables generadas por NetBeans.
     private javax.swing.JButton BtnAdministrarUsuariosAdmins;
     private javax.swing.JButton BtnAltaYBaja;
     private javax.swing.JButton BtnCerrarSesion;

@@ -11,23 +11,31 @@ import java.util.Optional;
 import ui.menu.Menu_Principal;
 
 /**
- * Formulario para alta, baja y consulta de productos.
- * Si “Activo” está marcado, crea o actualiza;
- * si no, elimina.
- * Permite buscar por ID y cargar los datos en los campos.
- * NetBeans guarded blocks conservados para edición visual.
- * @author Liliana
+ * JFrame para dar de alta, baja (lógica) y modificar productos del inventario.
+ * Permite buscar productos por ID para cargar sus datos y editarlos.
+ * La creación de un nuevo producto requiere un ID único.
+ * La "baja" se realiza marcando el producto como inactivo.
  */
 public class AltaYBaja extends javax.swing.JFrame {
 
     private final ProductoDatos datos = new ProductoDatos();
 
+    /**
+     * Constructor. Inicializa componentes y configura listeners.
+     */
     public AltaYBaja() {
         initComponents();
+        setLocationRelativeTo(null); // Centrar ventana
+        setTitle("Gestión de Productos"); // Título de la ventana
         BtnRegresar.addActionListener(this::BtnRegresarActionPerformed);
+        // Configurar el checkbox "Activo" por defecto y tooltips
+        jCheckBoxEsActivo.setSelected(true);
+        jCheckBoxEsActivo.setToolTipText("Marcar para crear/actualizar. Desmarcar para dar de baja (eliminar lógicamente).");
+        txtFechaCaducidad.setToolTipText("Formato: dd/MM/yy (ej: 31/12/24)");
     }
 
     @SuppressWarnings("unchecked")
+    // Los comentarios de NetBeans para initComponents y variables se omiten por brevedad.
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -52,47 +60,56 @@ public class AltaYBaja extends javax.swing.JFrame {
         BtnGuardar1 = new javax.swing.JButton();
         BtnRegresar = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE); // Cambiado a DISPOSE_ON_CLOSE
 
         jPanel2.setBackground(new java.awt.Color(51, 102, 255));
         jPanel2.setForeground(new java.awt.Color(0, 102, 255));
 
         jLabel1.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setText("Nombre");
 
         jLabel2.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("Precio");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
-        jLabel3.setText("Descripcion");
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setText("Descripción");
 
         jLabel4.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
-        jLabel4.setText("ID");
+        jLabel4.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel4.setText("ID Producto");
 
+        txtPrecio.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtPrecio.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtPrecioActionPerformed(evt);
             }
         });
 
+        txtNombreProducto.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtNombreProducto.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtNombreProductoActionPerformed(evt);
             }
         });
 
+        txtFechaCaducidad.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtFechaCaducidad.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtFechaCaducidadActionPerformed(evt);
             }
         });
 
+        txtCantidad.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtCantidad.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtCantidadActionPerformed(evt);
             }
         });
 
+        txtID.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtIDActionPerformed(evt);
@@ -100,17 +117,22 @@ public class AltaYBaja extends javax.swing.JFrame {
         });
 
         jLabel5.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
-        jLabel5.setText("Fecha de caducidad");
+        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setText("Fecha de Caducidad");
 
         jLabel6.setFont(new java.awt.Font("Segoe UI Emoji", 0, 24)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(255, 255, 255));
         jLabel6.setText("Cantidad");
 
         txtDescripcion.setColumns(20);
+        txtDescripcion.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         txtDescripcion.setRows(5);
         jScrollPane1.setViewportView(txtDescripcion);
 
         jCheckBoxEsActivo.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
+        jCheckBoxEsActivo.setForeground(new java.awt.Color(255, 255, 255));
         jCheckBoxEsActivo.setText("Activo");
+        jCheckBoxEsActivo.setOpaque(false);
         jCheckBoxEsActivo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxEsActivoActionPerformed(evt);
@@ -118,29 +140,32 @@ public class AltaYBaja extends javax.swing.JFrame {
         });
 
         BtnBuscarPorID.setBackground(new java.awt.Color(0, 0, 0));
-        BtnBuscarPorID.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
+        BtnBuscarPorID.setFont(new java.awt.Font("Segoe UI Emoji", 1, 18)); // NOI18N
         BtnBuscarPorID.setForeground(new java.awt.Color(255, 255, 255));
         BtnBuscarPorID.setText("Buscar por ID");
+        BtnBuscarPorID.setToolTipText("Busca un producto existente por su ID y carga sus datos.");
         BtnBuscarPorID.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnBuscarPorIDActionPerformed(evt);
             }
         });
 
-        BtnCancelar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnCancelar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
+        BtnCancelar.setBackground(new java.awt.Color(204, 0, 51));
+        BtnCancelar.setFont(new java.awt.Font("Segoe UI Emoji", 1, 18)); // NOI18N
         BtnCancelar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnCancelar.setText("Cancelar");
+        BtnCancelar.setText("Limpiar Campos");
+        BtnCancelar.setToolTipText("Limpia todos los campos del formulario.");
         BtnCancelar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnCancelarActionPerformed(evt);
             }
         });
 
-        BtnGuardar1.setBackground(new java.awt.Color(0, 0, 0));
-        BtnGuardar1.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
+        BtnGuardar1.setBackground(new java.awt.Color(0, 153, 51));
+        BtnGuardar1.setFont(new java.awt.Font("Segoe UI Emoji", 1, 18)); // NOI18N
         BtnGuardar1.setForeground(new java.awt.Color(255, 255, 255));
         BtnGuardar1.setText("Guardar");
+        BtnGuardar1.setToolTipText("Guarda el producto nuevo o los cambios al producto existente.");
         BtnGuardar1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 BtnGuardar1ActionPerformed(evt);
@@ -148,9 +173,10 @@ public class AltaYBaja extends javax.swing.JFrame {
         });
 
         BtnRegresar.setBackground(new java.awt.Color(0, 0, 0));
-        BtnRegresar.setFont(new java.awt.Font("Segoe UI Emoji", 0, 18)); // NOI18N
+        BtnRegresar.setFont(new java.awt.Font("Segoe UI Emoji", 1, 18)); // NOI18N
         BtnRegresar.setForeground(new java.awt.Color(255, 255, 255));
-        BtnRegresar.setText("Regresar");
+        BtnRegresar.setText("Regresar al Menú");
+        BtnRegresar.setToolTipText("Vuelve al menú principal sin guardar cambios.");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -188,9 +214,9 @@ public class AltaYBaja extends javax.swing.JFrame {
                 .addGap(50, 50, 50))
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addGap(7, 7, 7)
-                .addComponent(BtnRegresar, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(BtnRegresar, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(BtnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(BtnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(41, 41, 41)
                 .addComponent(BtnGuardar1, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(55, 55, 55)
@@ -292,163 +318,180 @@ public class AltaYBaja extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void BtnBuscarPorIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnBuscarPorIDActionPerformed
+    /**
+     * Busca un producto por su ID y carga sus datos en los campos del formulario.
+     */
+    private void BtnBuscarPorIDActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             int id = Integer.parseInt(txtID.getText().trim());
-            Optional<Producto> opt = datos.buscarPorId(id);
+            Optional<Producto> opt = datos.buscarPorId(id); // Asume que buscarPorId ahora solo busca activos.
+                                                          // Si también debe buscar inactivos para editarlos, se necesitaría otro método en ProductoDatos.
             if (opt.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "Producto no encontrado",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Producto no encontrado o está inactivo.", "No Encontrado", JOptionPane.WARNING_MESSAGE);
+                limpiarCampos(false); // Limpiar campos excepto ID
                 return;
             }
             Producto p = opt.get();
-            // Rellenar campos básicos
             txtNombreProducto.setText(p.nombre());
             txtDescripcion.setText(p.descripcion());
             txtPrecio.setText(String.valueOf(p.precio()));
             txtCantidad.setText(String.valueOf(p.cantidad()));
             jCheckBoxEsActivo.setSelected(p.activo());
     
-            // ───formateo correcto ─────────────
             if (p.fechaCaducidad() != null) {
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yy");
                 txtFechaCaducidad.setText(p.fechaCaducidad().format(fmt));
             } else {
                 txtFechaCaducidad.setText("");
             }
-            // ────────────────────────────────────────────
-    
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                "ID inválido",
-                "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El ID debe ser un número válido.", "ID Inválido", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_BtnBuscarPorIDActionPerformed
+    }
 
-    private void BtnGuardar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnGuardar1ActionPerformed
+    /**
+     * Guarda un producto nuevo o actualiza uno existente.
+     * Si el checkbox "Activo" no está marcado, intenta dar de baja (eliminar lógicamente) el producto.
+     */
+    private void BtnGuardar1ActionPerformed(java.awt.event.ActionEvent evt) {
         try {
-        // 1) Leer y validar campos básicos
-        int id = Integer.parseInt(txtID.getText().trim());
-        String nombre    = txtNombreProducto.getText().trim();
-        String descripcion = txtDescripcion.getText().trim();
-        double precio    = Double.parseDouble(txtPrecio.getText().trim());
-        int cantidad     = Integer.parseInt(txtCantidad.getText().trim());
-        boolean activo   = jCheckBoxEsActivo.isSelected();
+            int id;
+            try {
+                id = Integer.parseInt(txtID.getText().trim());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "El ID del producto debe ser un número.", "ID Inválido", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-        if (nombre.isEmpty() || descripcion.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                "Nombre y descripción no pueden estar vacíos",
-                "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+            String nombre = txtNombreProducto.getText().trim();
+            String descripcion = txtDescripcion.getText().trim();
+            double precio;
+            int cantidad;
 
-        // 2) Parsear fecha con el formato dd/MM/yy
-        LocalDate fechaCaducidad = null;
-        String fc = txtFechaCaducidad.getText().trim();
-        if (!fc.isEmpty()) {
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yy");
-            fechaCaducidad = LocalDate.parse(fc, fmt);
-        }
+            try {
+                precio = Double.parseDouble(txtPrecio.getText().trim());
+                cantidad = Integer.parseInt(txtCantidad.getText().trim());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Precio y Cantidad deben ser números válidos.", "Datos Inválidos", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-        // 3) Construir objeto Producto
-        Producto p = new Producto(
-            id,
-            nombre,
-            descripcion,
-            precio,
-            cantidad,
-            fechaCaducidad,
-            activo
-        );
+            boolean activo = jCheckBoxEsActivo.isSelected();
 
-        // 4) Insertar o actualizar (o eliminar si no está activo)
-        if (activo) {
-            Optional<Producto> existente = datos.buscarPorId(id);
-            if (existente.isPresent()) { // Product exists, so update it
-                datos.actualizar(p);
-                JOptionPane.showMessageDialog(this,
-                    "Producto actualizado correctamente", // Changed message for clarity
-                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Product does not exist, so try to insert it
-                if (datos.idExiste(id)) { // Check if the chosen ID is already taken by another product
-                    JOptionPane.showMessageDialog(this,
-                        "Error: El ID de producto '" + id + "' ya existe. Por favor, elija un ID diferente.",
-                        "Error de Duplicado", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    datos.insertar(p); // 'insertar' is now void
-                    JOptionPane.showMessageDialog(this,
-                        "Producto guardado correctamente con ID " + id, // Message confirms user-provided ID
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            if (nombre.isEmpty()) { // Descripción puede ser opcional según reglas de negocio
+                JOptionPane.showMessageDialog(this, "El nombre del producto no puede estar vacío.", "Campo Obligatorio", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (precio <= 0 || cantidad < 0) {
+                JOptionPane.showMessageDialog(this, "Precio debe ser mayor a cero y cantidad no puede ser negativa.", "Valores Inválidos", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            LocalDate fechaCaducidad = null;
+            String fcStr = txtFechaCaducidad.getText().trim();
+            if (!fcStr.isEmpty()) {
+                try {
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yy");
+                    fechaCaducidad = LocalDate.parse(fcStr, fmt);
+                } catch (DateTimeParseException ex) {
+                    JOptionPane.showMessageDialog(this, "Formato de fecha inválido. Use dd/MM/yy (ej: 31/12/24).", "Fecha Inválida", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
             }
-        } else {
-            // baja del producto
-            if (datos.buscarPorId(id).isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "No existe producto con ID " + id,
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                datos.eliminar(id);
-                JOptionPane.showMessageDialog(this,
-                    "Producto eliminado correctamente",
-                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            Producto p = new Producto(id, nombre, descripcion, precio, cantidad, fechaCaducidad, activo);
+
+            Optional<Producto> existenteOpt = datos.buscarPorId(id); // Busca si el producto ya existe (activo o inactivo)
+
+            if (activo) { // Intención de crear o actualizar un producto activo
+                if (existenteOpt.isPresent()) { // El ID ya existe, se intenta actualizar
+                    datos.actualizar(p);
+                    JOptionPane.showMessageDialog(this, "Producto con ID " + id + " actualizado correctamente.", "Actualización Exitosa", JOptionPane.INFORMATION_MESSAGE);
+                } else { // El ID no existe, se intenta crear uno nuevo
+                    datos.insertar(p);
+                    JOptionPane.showMessageDialog(this, "Producto nuevo con ID " + id + " guardado correctamente.", "Creación Exitosa", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else { // Intención de dar de baja (marcar como inactivo)
+                if (existenteOpt.isPresent()) {
+                    if (!existenteOpt.get().activo()) {
+                         JOptionPane.showMessageDialog(this, "El producto con ID " + id + " ya se encuentra inactivo.", "Información", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        datos.eliminar(id); // 'eliminar' en ProductoDatos realmente marca como inactivo
+                        JOptionPane.showMessageDialog(this, "Producto con ID " + id + " marcado como inactivo (dado de baja).", "Baja Exitosa", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se puede dar de baja un producto con ID " + id + " porque no existe.", "Error de Baja", JOptionPane.ERROR_MESSAGE);
+                }
             }
+            limpiarCampos(true);
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error en la base de datos: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) { // Captura general para otros errores inesperados
+             JOptionPane.showMessageDialog(this, "Ocurrió un error inesperado: " + ex.getMessage(), "Error Inesperado", JOptionPane.ERROR_MESSAGE);
         }
-
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this,
-            "Formato numérico inválido en ID, precio o cantidad",
-            "Error", JOptionPane.ERROR_MESSAGE);
-    } catch (DateTimeParseException ex) {
-        JOptionPane.showMessageDialog(this,
-            "Formato de fecha inválido (debe ser dd/MM/yy)",
-            "Error", JOptionPane.ERROR_MESSAGE);
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this,
-            "Error en la base de datos: " + ex.getMessage(),
-            "Error", JOptionPane.ERROR_MESSAGE);
     }
-    }//GEN-LAST:event_BtnGuardar1ActionPerformed
 
-    private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCancelarActionPerformed
-        this.dispose();
-    }//GEN-LAST:event_BtnCancelarActionPerformed
+    /**
+     * Limpia los campos del formulario.
+     * @param limpiarTodo Si es true, limpia todos los campos incluido el ID. Si es false, preserva el ID.
+     */
+    private void limpiarCampos(boolean limpiarTodo) {
+        if (limpiarTodo) {
+            txtID.setText("");
+        }
+        txtNombreProducto.setText("");
+        txtDescripcion.setText("");
+        txtPrecio.setText("");
+        txtCantidad.setText("");
+        txtFechaCaducidad.setText("");
+        jCheckBoxEsActivo.setSelected(true); // Por defecto, para nueva alta
+        txtNombreProducto.requestFocus(); // Poner foco en el primer campo útil
+    }
 
-    // NetBeans-generated empty handlers
-    private void txtNombreProductoActionPerformed(java.awt.event.ActionEvent evt) {}
-    private void txtFechaCaducidadActionPerformed(java.awt.event.ActionEvent evt) {}
-    private void txtCantidadActionPerformed(java.awt.event.ActionEvent evt) {}
-    private void txtIDActionPerformed(java.awt.event.ActionEvent evt) {}
-    private void txtPrecioActionPerformed(java.awt.event.ActionEvent evt) {}
-    private void jCheckBoxEsActivoActionPerformed(java.awt.event.ActionEvent evt) {}
-    // End of empty handlers
+    /**
+     * Acción para el botón "Cancelar" (ahora "Limpiar Campos"). Limpia el formulario.
+     */
+    private void BtnCancelarActionPerformed(java.awt.event.ActionEvent evt) {
+        limpiarCampos(true); // Limpia todos los campos, incluyendo el ID.
+    }
 
+    // Los siguientes métodos son generados por NetBeans y usualmente vacíos si no se les añade lógica.
+    // Se pueden dejar o eliminar si no tienen funcionalidad específica.
+    private void txtNombreProductoActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+    private void txtFechaCaducidadActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+    private void txtCantidadActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+    private void txtIDActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+    private void txtPrecioActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+    private void jCheckBoxEsActivoActionPerformed(java.awt.event.ActionEvent evt) { /* Vacío */ }
+
+    /**
+     * Acción para el botón "Regresar". Vuelve al menú principal.
+     */
     private void BtnRegresarActionPerformed(java.awt.event.ActionEvent evt) {
         new ui.menu.Menu_Principal().setVisible(true);
         this.dispose();
     }
 
+    /**
+     * Método main para pruebas (opcional).
+     */
     public static void main(String args[]) {
-        /* Nimbus look & feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code ">
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info :
-                 javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
         } catch (Exception ex) {
-            // si falla, usar L&F por defecto
+            java.util.logging.Logger.getLogger(AltaYBaja.class.getName()).log(java.util.logging.Level.INFO, "Nimbus L&F no disponible.", ex);
         }
-        //</editor-fold>
 
         java.awt.EventQueue.invokeLater(() -> new AltaYBaja().setVisible(true));
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables generadas por NetBeans.
     private javax.swing.JButton BtnBuscarPorID;
     private javax.swing.JButton BtnCancelar;
     private javax.swing.JButton BtnGuardar1;

@@ -11,7 +11,11 @@ import java.util.Optional;
 
 public class ProductoDatos {
 
-    /** Inserta un producto (el ID debe ser proporcionado por el llamador) */
+    /**
+     * Inserta un nuevo producto en la base de datos.
+     * @param p El producto a insertar.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
+     */
     public void insertar(Producto p) throws SQLException {
         String sql = """
             INSERT INTO productos
@@ -25,7 +29,11 @@ public class ProductoDatos {
         }
     }
 
-    /** Actualiza un producto existente */
+    /**
+     * Actualiza un producto existente en la base de datos.
+     * @param p El producto con los datos actualizados.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
+     */
     public void actualizar(Producto p) throws SQLException {
         String sql = """
             UPDATE productos SET
@@ -38,17 +46,25 @@ public class ProductoDatos {
         }
     }
 
-    /** Cambia el estado de un producto a inactivo (activo = 0) por su ID */
+    /**
+     * Marca un producto como inactivo (eliminación lógica).
+     * @param id El ID del producto a marcar como inactivo.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
+     */
     public void eliminar(int id) throws SQLException {
         String sql = "UPDATE productos SET activo = ? WHERE id_producto = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
-            ps.setBoolean(1, false); // Set activo to false (0)
+            ps.setBoolean(1, false); // Marca activo como false
             ps.setInt(2, id);
             ps.executeUpdate();
         }
     }
 
-    /** Busca un producto por ID */
+    /**
+     * Busca un producto activo por su ID.
+     * @param id El ID del producto a buscar.
+     * @return Un Optional con el Producto si se encuentra y está activo, o vacío.
+     */
     public Optional<Producto> buscarPorId(int id) {
         String sql = "SELECT * FROM productos WHERE id_producto=?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
@@ -59,16 +75,20 @@ public class ProductoDatos {
                 if (producto.activo()) {
                     return Optional.of(producto);
                 } else {
-                    return Optional.empty(); // Producto inactivo
+                    return Optional.empty(); // Producto inactivo, no se retorna
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return Optional.empty();
     }
 
-    /** Busca productos cuyo nombre contenga el patrón dado */
+    /**
+     * Busca productos activos cuyo nombre contenga el patrón dado.
+     * @param patron El patrón de búsqueda para el nombre.
+     * @return Una lista de productos activos que coinciden con el patrón.
+     */
     public List<Producto> buscarPorNombre(String patron) {
         List<Producto> lista = new ArrayList<>();
         String sql = "SELECT * FROM productos WHERE nombre LIKE ? AND activo = true";
@@ -79,12 +99,15 @@ public class ProductoDatos {
                 lista.add(mapear(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return lista;
     }
 
-    /** Lista **todos** los productos */
+    /**
+     * Lista todos los productos activos.
+     * @return Una lista de todos los productos activos.
+     */
     public List<Producto> listarProductos() {
         List<Producto> lista = new ArrayList<>();
         String sql = "SELECT * FROM productos WHERE activo = true";
@@ -94,15 +117,19 @@ public class ProductoDatos {
                 lista.add(mapear(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return lista;
     }
 
-    /* ==== Helpers ==== */
+    /**
+     * Método auxiliar para cargar los parámetros de un Producto en un PreparedStatement.
+     * @param ps El PreparedStatement a cargar.
+     * @param p El Producto con los datos.
+     * @param isUpdate Indica si la operación es una actualización (true) o inserción (false).
+     * @throws SQLException Si ocurre un error al establecer los parámetros.
+     */
     private void cargar(PreparedStatement ps, Producto p, boolean isUpdate) throws SQLException {
-        // If it's an update, ID is the last parameter in WHERE clause
-        // If it's an insert, ID is the first parameter
         if (isUpdate) {
             ps.setString(1, p.nombre());
             ps.setString(2, p.descripcion());
@@ -130,6 +157,12 @@ public class ProductoDatos {
         }
     }
 
+    /**
+     * Mapea un ResultSet a un objeto Producto.
+     * @param r El ResultSet a mapear.
+     * @return El objeto Producto.
+     * @throws SQLException Si ocurre un error al acceder a los datos del ResultSet.
+     */
     private Producto mapear(ResultSet r) throws SQLException {
         Date f = r.getDate("fecha_caducidad");
         return new Producto(
@@ -143,6 +176,11 @@ public class ProductoDatos {
         );
     }
 
+    /**
+     * Verifica si un ID de producto ya existe en la base de datos.
+     * @param id El ID del producto a verificar.
+     * @return true si el ID existe, false en caso contrario.
+     */
     public boolean idExiste(int id) {
         String sql = "SELECT COUNT(*) FROM productos WHERE id_producto=?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
@@ -152,9 +190,9 @@ public class ProductoDatos {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Or handle more gracefully
+            e.printStackTrace(); // Considerar loguear la excepción
         }
-        return false; // Default to false on error or if not found
+        return false;
     }
 }
 

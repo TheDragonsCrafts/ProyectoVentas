@@ -9,30 +9,35 @@ import datos.AdministradorDatos;
 
 public class LoginFrame extends javax.swing.JFrame {
 
-    // Servicio de login (campo manual, fuera de los guarded blocks)
     private final ServicioLogin servicioLogin = new ServicioLogin();
-    private int intentosFallidos = 0; // Contador de intentos fallidos
-    private boolean primerAdminFueCreadoExitosamente = false; // Bandera
+    private int intentosFallidos = 0;
+    private boolean primerAdminFueCreadoExitosamente = false;
 
+    /**
+     * Constructor del LoginFrame.
+     * Inicializa los componentes y ajusta la visibilidad de los botones
+     * según si existe o no un administrador maestro.
+     */
     public LoginFrame() {
         initComponents();
+        setLocationRelativeTo(null); // Centrar ventana
 
-        // Check if a master admin exists to determine button visibility
         AdministradorDatos adminDatos = new AdministradorDatos();
         if (!adminDatos.existeAdminMaestro()) {
+            // Si no hay admin maestro, solo mostrar botón para crearlo.
             BtnCrearAdmin.setVisible(true);
             btnIniciarSesion.setVisible(false);
-            btnOlvidastelacontrasena.setVisible(false); // Ocultar si no hay admin maestro
-            // It's also a good idea to ensure CrearAdminFrame sets the 'Admin Maestro' checkbox
-            // if no master admin exists, but that will be handled in CrearAdminFrame.java
+            btnOlvidastelacontrasena.setVisible(false);
         } else {
+            // Si ya existe, mostrar opciones de login y recuperación.
             BtnCrearAdmin.setVisible(false);
             btnIniciarSesion.setVisible(true);
-            btnOlvidastelacontrasena.setVisible(true); // Mostrar si hay admin maestro
+            btnOlvidastelacontrasena.setVisible(true);
         }
     }
 
     @SuppressWarnings("unchecked")
+    // Comentarios de NetBeans para initComponents y variables omitidos por brevedad.
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 

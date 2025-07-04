@@ -8,38 +8,44 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Provee una conexión única (singleton) a la base de datos.
+ * Gestiona la conexión a la base de datos.
+ * Utiliza un patrón Singleton para mantener una única instancia de conexión.
+ * Lee la configuración de la base de datos desde `db.properties`.
  */
 public final class ConexionBD {
 
     private static Connection conexion;
 
+    // Constructor privado para evitar instanciación externa.
     private ConexionBD() { }
 
+    /**
+     * Obtiene la instancia de la conexión a la base de datos.
+     * Si la conexión no existe o está cerrada, la crea.
+     * @return La conexión activa a la base de datos.
+     * @throws SQLException Si ocurre un error al conectar o configurar.
+     */
     public static Connection obtener() throws SQLException {
         if (conexion == null || conexion.isClosed()) {
-            // 1) Asegurarnos de que el driver de MySQL esté cargado
+            // Cargar driver MySQL
             try {
                 Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (ClassNotFoundException e) {
-                throw new SQLException("Driver MySQL no encontrado. " +
-                                       "¿Añadiste mysql-connector-java al classpath?", e);
+                throw new SQLException("Driver MySQL no encontrado. Asegúrate de que mysql-connector-java esté en el classpath.", e);
             }
 
-            // 2) Cargar propiedades desde /seguridad/db.properties
+            // Cargar propiedades de conexión desde db.properties
             Properties p = new Properties();
-            try (InputStream is = ConexionBD.class
-                     .getResourceAsStream("/seguridad/db.properties")) {
+            try (InputStream is = ConexionBD.class.getResourceAsStream("/seguridad/db.properties")) {
                 if (is == null) {
-                    throw new SQLException(
-                        "No se encontró db.properties en /seguridad");
+                    throw new SQLException("Archivo db.properties no encontrado en el classpath /seguridad.");
                 }
                 p.load(is);
             } catch (IOException ex) {
-                throw new SQLException("Error al leer db.properties", ex);
+                throw new SQLException("Error al leer db.properties.", ex);
             }
 
-            // 3) Abrir la conexión
+            // Establecer la conexión
             conexion = DriverManager.getConnection(
                 p.getProperty("url"),
                 p.getProperty("user"),

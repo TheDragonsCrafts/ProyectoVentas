@@ -12,6 +12,8 @@ public class AdministradorDatos {
 
     /**
      * Busca un administrador por su nombre de usuario.
+     * @param usuario El nombre de usuario a buscar.
+     * @return Un Optional con el Administrador si se encuentra, o vacío.
      */
     public Optional<Administrador> buscarPorUsuario(String usuario) {
         String sql = "SELECT * FROM administradores WHERE nombre_usuario = ?";
@@ -26,6 +28,11 @@ public class AdministradorDatos {
         return Optional.empty();
     }
 
+    /**
+     * Busca un administrador por su ID.
+     * @param idAdmin El ID del administrador a buscar.
+     * @return Un Optional con el Administrador si se encuentra, o vacío.
+     */
     public Optional<Administrador> buscarPorId(int idAdmin) {
         String sql = "SELECT * FROM administradores WHERE id_administrador = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
@@ -34,13 +41,14 @@ public class AdministradorDatos {
                 if (rs.next()) return Optional.of(mapear(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return Optional.empty();
     }
 
     /**
-     * Comprueba si ya existe un Administrador Maestro en la BD.
+     * Comprueba si ya existe un Administrador Maestro en la base de datos.
+     * @return true si existe al menos un admin maestro, false en caso contrario.
      */
     public boolean existeAdminMaestro() {
         String sql = "SELECT COUNT(*) FROM administradores WHERE es_admin_maestro = 1";
@@ -57,6 +65,8 @@ public class AdministradorDatos {
 
     /**
      * Inserta un nuevo Administrador en la base de datos.
+     * @param a El objeto Administrador a insertar.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
      */
     public void insertar(Administrador a) throws SQLException {
         String sql = """
@@ -77,21 +87,18 @@ public class AdministradorDatos {
     }
 
     /**
-     * Actualiza un Administrador en la base de datos.
-     * Este método actualiza todos los campos, incluyendo el hash de contraseña,
-     * utilizando el accesor admin.passwordHash() y nombres de columna consistentes
-     * con el método 'insertar'.
+     * Actualiza un Administrador existente en la base de datos.
+     * @param admin El objeto Administrador con los datos actualizados.
+     * @return true si la actualización fue exitosa, false en caso contrario.
      */
     public boolean actualizar(Administrador admin) {
-        // Using column names consistent with 'insertar' and 'mapear':
-        // nombre_usuario, hash_contraseña, nombre_completo, correo_electrónico, es_admin_maestro, id_administrador
         String sql = "UPDATE administradores SET nombre_usuario = ?, hash_contraseña = ?, nombre_completo = ?, correo_electrónico = ?, es_admin_maestro = ? WHERE id_administrador = ?";
 
         try (Connection con = ConexionBD.obtener();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, admin.usuario());
-            ps.setString(2, admin.hash()); // Reverted to admin.hash()
+            ps.setString(2, admin.hash());
             ps.setString(3, admin.nombreCompleto());
             ps.setString(4, admin.correo());
             ps.setBoolean(5, admin.adminMaestro());
@@ -101,27 +108,32 @@ public class AdministradorDatos {
             return filasAfectadas > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Considerar loguear la excepción
             return false;
         }
     }
 
+    /**
+     * Elimina un administrador por su ID.
+     * @param idAdministrador El ID del administrador a eliminar.
+     * @return true si la eliminación fue exitosa, false en caso contrario.
+     */
     public boolean eliminar(int idAdministrador) {
-        // La lógica para prevenir la eliminación del último admin maestro
-        // se manejará principalmente en la capa de UI o servicio,
-        // pero podríamos añadir una comprobación aquí si fuera estrictamente necesario
-        // por reglas de negocio a nivel de datos. Por ahora, se mantiene simple.
         String sql = "DELETE FROM administradores WHERE id_administrador = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
             ps.setInt(1, idAdministrador);
             int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
+            e.printStackTrace(); // Considerar loguear la excepción
             return false;
         }
     }
 
+    /**
+     * Obtiene el Administrador Maestro, si existe.
+     * @return Un Optional con el Administrador Maestro, o vacío.
+     */
     public Optional<Administrador> obtenerAdminMaestro() {
         String sql = "SELECT * FROM administradores WHERE es_admin_maestro = 1 LIMIT 1";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
@@ -130,11 +142,15 @@ public class AdministradorDatos {
                 return Optional.of(mapear(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return Optional.empty();
     }
 
+    /**
+     * Cuenta el número de Administradores Maestros.
+     * @return El número total de administradores maestros.
+     */
     public int contarAdministradoresMaestros() {
         String sql = "SELECT COUNT(*) FROM administradores WHERE es_admin_maestro = 1";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
@@ -143,11 +159,15 @@ public class AdministradorDatos {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return 0;
     }
 
+    /**
+     * Cuenta el número de Administradores activos.
+     * @return El número total de administradores activos.
+     */
     public int contarAdministradoresActivos() {
         String sql = "SELECT COUNT(*) FROM administradores WHERE activo = 1";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql);
@@ -156,11 +176,15 @@ public class AdministradorDatos {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Consider logging
+            e.printStackTrace(); // Considerar loguear la excepción
         }
         return 0;
     }
 
+    /**
+     * Lista todos los administradores.
+     * @return Una lista de todos los administradores.
+     */
     public List<Administrador> listarTodos() {
         List<Administrador> administradores = new ArrayList<>();
         String sql = "SELECT * FROM administradores";
@@ -170,12 +194,16 @@ public class AdministradorDatos {
                 administradores.add(mapear(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            // Consider logging the exception or throwing a custom exception
+            e.printStackTrace(); // Considerar loguear o lanzar excepción personalizada
         }
         return administradores;
     }
 
+    /**
+     * Busca administradores por un término de búsqueda (nombre de usuario o nombre completo).
+     * @param termino El término a buscar.
+     * @return Una lista de administradores que coinciden con el término.
+     */
     public List<Administrador> buscarPorTermino(String termino) {
         List<Administrador> administradores = new ArrayList<>();
         String sql = "SELECT * FROM administradores WHERE nombre_usuario LIKE ? OR nombre_completo LIKE ?";
@@ -189,15 +217,17 @@ public class AdministradorDatos {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-            // Consider logging the exception or throwing a custom exception
+            e.printStackTrace(); // Considerar loguear o lanzar excepción personalizada
         }
         return administradores;
     }
 
-    // The original 'actualizar' method with conditional password update has been removed
-    // as per the decision to have a single 'actualizar' method that aligns with the subtask's requirements.
-
+    /**
+     * Actualiza el estado 'activo' de un administrador.
+     * @param idAdministrador El ID del administrador a actualizar.
+     * @param nuevoEstado El nuevo estado (true para activo, false para inactivo).
+     * @return true si la actualización fue exitosa, false en caso contrario.
+     */
     public boolean actualizarEstadoActivo(int idAdministrador, boolean nuevoEstado) {
         String sql = "UPDATE administradores SET activo = ? WHERE id_administrador = ?";
         try (PreparedStatement ps = ConexionBD.obtener().prepareStatement(sql)) {
@@ -206,18 +236,17 @@ public class AdministradorDatos {
             int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            // Consider logging the exception
+            e.printStackTrace(); // Considerar loguear la excepción
             return false;
         }
     }
 
     /**
      * Actualiza la contraseña de un administrador si el nombre de usuario y correo coinciden.
-     * @param nombreUsuario El nombre de usuario del administrador.
-     * @param correo El correo electrónico del administrador.
-     * @param nuevaContrasena La nueva contraseña en texto plano.
-     * @return true si la contraseña fue actualizada, false en caso contrario.
+     * @param nombreUsuario El nombre de usuario.
+     * @param correo El correo electrónico.
+     * @param nuevaContrasena La nueva contraseña (texto plano).
+     * @return true si la contraseña se actualizó, false en caso contrario.
      */
     public boolean actualizarContrasenaPorUsuarioYCorreo(String nombreUsuario, String correo, String nuevaContrasena) {
         Optional<Administrador> adminOpt = buscarPorUsuario(nombreUsuario);
@@ -232,7 +261,7 @@ public class AdministradorDatos {
                     int filasAfectadas = ps.executeUpdate();
                     return filasAfectadas > 0;
                 } catch (SQLException e) {
-                    e.printStackTrace(); // Consider logging
+                    e.printStackTrace(); // Considerar loguear la excepción
                     return false;
                 }
             }
@@ -240,7 +269,12 @@ public class AdministradorDatos {
         return false;
     }
 
-    /* ==== Helper ==== */
+    /**
+     * Mapea un ResultSet a un objeto Administrador.
+     * @param r El ResultSet a mapear.
+     * @return El objeto Administrador.
+     * @throws SQLException Si ocurre un error al acceder a los datos del ResultSet.
+     */
     private Administrador mapear(ResultSet r) throws SQLException {
         return new Administrador(
             r.getInt("id_administrador"),

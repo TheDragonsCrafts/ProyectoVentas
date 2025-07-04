@@ -9,9 +9,9 @@ import ui.login.LoginFrame;
 import javax.swing.JOptionPane;
 
 /**
- * Formulario para crear nuevos administradores.
- * Conserva los bloques generados por NetBeans para edición visual.
- * @author Liliana
+ * JFrame para la creación y edición de administradores.
+ * Permite establecer un administrador como maestro y maneja la lógica
+ * para asegurar que solo exista un administrador maestro o se transfiera el rol.
  */
 public class CrearAdminFrame extends javax.swing.JFrame {
 
@@ -19,49 +19,50 @@ public class CrearAdminFrame extends javax.swing.JFrame {
     private final AdministradorDatos datos = new AdministradorDatos();
     private Administrador adminAEditar;
     private boolean editorPerdioRolMaestro = false;
-    private LoginFrame loginFrameInstancia; // Para notificar al LoginFrame original
+    private LoginFrame loginFrameInstancia; // Referencia para notificar creación del primer admin maestro.
 
     /**
-     * Creates new form CrearAdminFrame for initial master admin creation.
-     * @param loginFrame La instancia del LoginFrame que llama, para notificarle.
+     * Constructor para la creación inicial del administrador maestro.
+     * @param loginFrame Instancia del LoginFrame que invoca, para notificarle.
      */
     public CrearAdminFrame(LoginFrame loginFrame) {
-        this(); // Llama al constructor sin argumentos para initComponents y lógica común
+        this(); // Llama al constructor base para inicializar componentes y lógica común.
         this.loginFrameInstancia = loginFrame;
-        // La lógica de jCheckBoxAdminMaestro ya está en el constructor sin args.
+        // La lógica para jCheckBoxAdminMaestro ya está en el constructor base.
     }
 
     /**
-     * Creates new form CrearAdminFrame for editing or creating subsequent admins.
+     * Constructor base para crear o editar administradores.
+     * Inicializa componentes y ajusta el estado del checkbox "Admin Maestro"
+     * según si ya existe uno.
      */
     public CrearAdminFrame() {
         initComponents();
-        setLocationRelativeTo(null);
-        // this.loginFrameInstancia será null si se llama a este constructor.
+        setLocationRelativeTo(null); // Centra la ventana.
 
-        // Logic to handle 'Admin Maestro' checkbox based on existing master admin
-        // This code should be in the constructor CrearAdminFrame()
-        // It seems 'datos' is already a field: private final AdministradorDatos datos = new AdministradorDatos();
-        // So we can use that.
+        // Configura el checkbox "Admin Maestro" basado en la existencia de uno.
         if (!this.datos.existeAdminMaestro()) {
             jCheckBoxAdminMaestro.setSelected(true);
-            jCheckBoxAdminMaestro.setEnabled(false);
+            jCheckBoxAdminMaestro.setEnabled(false); // Si no hay, el primero DEBE ser maestro.
         } else {
-            // Optional: Ensure it's not selected and is enabled if a master admin already exists
-            // and this frame is somehow opened directly (though current logic in LoginFrame should prevent this specific scenario for initial creation)
             jCheckBoxAdminMaestro.setSelected(false);
-            jCheckBoxAdminMaestro.setEnabled(true);
+            jCheckBoxAdminMaestro.setEnabled(true); // Si ya hay, permitir (des)marcar.
         }
     }
 
+    /**
+     * Constructor para editar un administrador existente.
+     * @param admin El administrador a editar.
+     */
     public CrearAdminFrame(Administrador admin) {
-        this(); // Llama al constructor sin argumentos para initComponents y lógica común
+        this(); // Llama al constructor base.
         this.adminAEditar = admin;
-        // initComponents(); Ya no es necesario aquí, se llama en this()
-        // setLocationRelativeTo(null); Ya no es necesario aquí, se llama en this()
         inicializarFormularioParaEdicion();
     }
 
+    /**
+     * Pre-llena el formulario con los datos del administrador a editar.
+     */
     private void inicializarFormularioParaEdicion() {
         if (this.adminAEditar != null) {
             txtUsuario.setText(adminAEditar.usuario());
@@ -69,12 +70,14 @@ public class CrearAdminFrame extends javax.swing.JFrame {
             txtCorreo.setText(adminAEditar.correo());
             jCheckBoxAdminMaestro.setSelected(adminAEditar.adminMaestro());
             jButtonCrearAdmin.setText("Guardar Cambios");
-            this.setTitle("Editar Administrador");
-            // Los campos de contraseña se dejan vacíos intencionalmente
+            this.setTitle("Editar Administrador: " + adminAEditar.usuario());
+            // Los campos de contraseña se dejan vacíos intencionalmente por seguridad.
         }
     }
 
     @SuppressWarnings("unchecked")
+    // Los comentarios generados por NetBeans para initComponents y variables se mantienen
+    // por compatibilidad con el editor visual, pero se omiten aquí por brevedad.
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 

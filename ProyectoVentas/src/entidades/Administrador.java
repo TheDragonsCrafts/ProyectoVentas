@@ -1,8 +1,8 @@
 package entidades;
 
 /**
- * Entidad Administrador con sus componentes y un getter adicional
- * para compatibilidad con llamadas a getUsuario().
+ * Representa un administrador del sistema.
+ * Almacena información de identificación, credenciales y roles.
  */
 public record Administrador(
         int id,
@@ -13,17 +13,12 @@ public record Administrador(
         boolean activo,
         boolean adminMaestro
 ) {
-    /**
-     * Getter adicional para el nombre de usuario,
-     * necesario si el código invoca admin.getUsuario().
-     */
-    public String getUsuario() {
-        return this.usuario;
-    }
+    // El método getUsuario() se elimina ya que los records generan accesors automáticamente (admin.usuario()).
+    // Si se necesita compatibilidad con JavaBeans (getUsuario), se puede añadir explícitamente,
+    // pero se prefiere el acceso directo al campo en records.
 
     /**
-     * Devuelve el nombre completo del administrador para ser usado en
-     * componentes de UI como JComboBox o JList.
+     * Representación en cadena del administrador, útil para UI (e.g., JComboBox).
      * @return El nombre completo del administrador.
      */
     @Override

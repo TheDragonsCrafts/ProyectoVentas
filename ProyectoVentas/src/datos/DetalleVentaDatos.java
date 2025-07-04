@@ -4,10 +4,15 @@ import entidades.DetalleVenta;
 import java.util.List;
 
 public class DetalleVentaDatos {
-    // Con los métodos de VentaDatos suele bastar.
-    // Aquí podrías añadir consultas específicas de detalles si las necesitas.
+
+    /**
+     * Lista los detalles de una venta específica.
+     * (Actualmente no implementado, retorna lista vacía)
+     * @param idVenta El ID de la venta.
+     * @return Una lista de DetalleVenta.
+     */
     public List<DetalleVenta> listarPorVenta(int idVenta) {
-        // Implementar si es necesario
+        // TODO: Implementar la lógica para obtener detalles de la BD por idVenta
         return List.of();
     }
 }

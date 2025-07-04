@@ -18,8 +18,11 @@ import java.time.LocalDateTime;
 public class VentaDatos {
 
     /**
-     * Crea una venta y sus detalles en una sola transacción.
-     * Devuelve el ID autogenerado.
+     * Registra una nueva venta y sus detalles en la base de datos.
+     * Realiza la operación como una transacción.
+     * @param v La Venta a registrar, incluyendo sus detalles.
+     * @return El ID autogenerado de la venta registrada.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos o la transacción falla.
      */
     public int registrarVenta(Venta v) throws SQLException {
         String sqlVenta = """
@@ -65,26 +68,37 @@ public class VentaDatos {
             throw e;
         } finally {
             cx.setAutoCommit(true);
-            // Consider returning cx to pool if applicable, for now, just ensuring autoCommit is reset.
+            // La conexión es manejada por ConexionBD, no se cierra aquí.
         }
     }
 
+    /**
+     * Obtiene una lista de ventas para mostrar en la UI, con filtros opcionales.
+     * Incluye detalles de cada venta (nombre de producto, cantidad, precio).
+     * @param nombreVendedor Filtro por nombre del vendedor (parcial, case-insensitive). Null o vacío para no filtrar.
+     * @param fechaInicio Filtro por fecha de inicio (inclusiva). Null para no filtrar.
+     * @param fechaFin Filtro por fecha de fin (inclusiva). Null para no filtrar.
+     * @return Una lista de VentaDisplayDTO.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
+     */
     public List<VentaDisplayDTO> obtenerVentasParaDisplay(String nombreVendedor, LocalDate fechaInicio, LocalDate fechaFin) throws SQLException {
         List<VentaDisplayDTO> ventasDisplay = new ArrayList<>();
         Map<Integer, List<DetalleVentaDisplayDTO>> detallesPorVentaId = new HashMap<>();
         List<Object> params = new ArrayList<>();
 
-        // Primero, obtener todos los detalles de venta.
-        // Esto es ineficiente si hay muchas ventas y solo se filtran algunas,
-        // pero simplifica la lógica ya que los detalles no se filtran directamente por fecha o vendedor.
-        // Una optimización sería filtrar las ventas primero y luego obtener detalles solo para esas ventas.
-        String sqlDetalles = "SELECT dv.id_venta, p.nombre AS nombre_producto, dv.cantidad, dv.precio_en_venta " +
-                             "FROM detalles_venta dv " +
-                             "JOIN productos p ON dv.id_producto = p.id_producto";
+        // 1. Obtener todos los detalles de venta relevantes y mapearlos por id_venta.
+        // Esta estrategia carga más detalles de los necesarios si hay muchos productos,
+        // pero simplifica el ensamblaje posterior.
+        // Una optimización sería obtener los ID de venta filtrados primero, luego sus detalles.
+        String sqlDetalles = """
+            SELECT dv.id_venta, p.nombre AS nombre_producto, dv.cantidad, dv.precio_en_venta
+            FROM detalles_venta dv
+            JOIN productos p ON dv.id_producto = p.id_producto
+            """;
+        // Si se quisiera optimizar, se podría añadir un JOIN con ventas y aplicar filtros aquí también.
 
-        Connection cx = null;
+        Connection cx = ConexionBD.obtener(); // Usar la misma conexión para todas las operaciones
         try {
-            cx = ConexionBD.obtener();
             try (Statement stmtDetalles = cx.createStatement();
                  ResultSet rsDetalles = stmtDetalles.executeQuery(sqlDetalles)) {
                 while (rsDetalles.next()) {
@@ -97,11 +111,13 @@ public class VentaDatos {
                 }
             }
 
-            // Construir la consulta de ventas dinámicamente
+            // 2. Construir y ejecutar la consulta de ventas con filtros dinámicos.
             StringBuilder sqlVentasBuilder = new StringBuilder(
-                "SELECT v.id_venta, v.fecha_venta, v.monto_total, v.estado, a.nombre_completo AS nombre_administrador " +
-                "FROM ventas v " +
-                "JOIN administradores a ON v.id_administrador = a.id_administrador"
+                """
+                SELECT v.id_venta, v.fecha_venta, v.monto_total, v.estado, a.nombre_completo AS nombre_administrador
+                FROM ventas v
+                JOIN administradores a ON v.id_administrador = a.id_administrador
+                """
             );
 
             List<String> conditions = new ArrayList<>();
@@ -119,8 +135,7 @@ public class VentaDatos {
             }
 
             if (!conditions.isEmpty()) {
-                sqlVentasBuilder.append(" WHERE ");
-                sqlVentasBuilder.append(String.join(" AND ", conditions));
+                sqlVentasBuilder.append(" WHERE ").append(String.join(" AND ", conditions));
             }
             sqlVentasBuilder.append(" ORDER BY v.fecha_venta DESC");
 
@@ -135,46 +150,41 @@ public class VentaDatos {
                         java.sql.Timestamp fechaVentaTimestamp = rsVentas.getTimestamp("fecha_venta");
                         LocalDateTime fechaVenta = (fechaVentaTimestamp != null) ? fechaVentaTimestamp.toLocalDateTime() : null;
                         double montoTotal = rsVentas.getDouble("monto_total");
-                        String estado = rsVentas.getString("estado");
+                        String estado = rsVentas.getString("estado"); // Asumiendo que 'estado' existe en la tabla ventas
                         String nombreAdministrador = rsVentas.getString("nombre_administrador");
                         List<DetalleVentaDisplayDTO> detalles = detallesPorVentaId.getOrDefault(idVenta, new ArrayList<>());
                         ventasDisplay.add(new VentaDisplayDTO(idVenta, fechaVenta, montoTotal, nombreAdministrador, detalles, estado));
                     }
                 }
             }
-        } finally {
-            if (cx != null) {
-                // Do not close the shared connection managed by ConexionBD.
-                // Simply ensure any open resources have been released.
-            }
+        } catch (SQLException e) {
+            // Considerar loguear la excepción
+            throw e;
         }
+        // La conexión es manejada por ConexionBD, no se cierra aquí.
         return ventasDisplay;
     }
 
     /**
      * Verifica si existen ventas asociadas a un administrador específico.
-     * @param idAdministrador el ID del administrador a verificar.
+     * @param idAdministrador El ID del administrador a verificar.
      * @return true si existen ventas, false en caso contrario.
-     * @throws SQLException si ocurre un error de base de datos.
+     * @throws SQLException Si ocurre un error de acceso a la base de datos.
      */
     public boolean existenVentasParaAdministrador(int idAdministrador) throws SQLException {
         String sql = "SELECT COUNT(*) FROM ventas WHERE id_administrador = ?";
-        Connection cx = null;
-        try {
-            cx = ConexionBD.obtener(); // Obtener conexión
-            try (PreparedStatement ps = cx.prepareStatement(sql)) {
-                ps.setInt(1, idAdministrador);
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return rs.getInt(1) > 0;
-                    }
+        try (Connection cx = ConexionBD.obtener(); // Obtener y cerrar la conexión en try-with-resources
+             PreparedStatement ps = cx.prepareStatement(sql)) {
+            ps.setInt(1, idAdministrador);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
                 }
             }
-        } finally {
-            // No cerramos la conexión aquí ya que es manejada por ConexionBD
-            // Si ConexionBD no maneja un pool y crea nuevas conexiones, debería cerrarse.
-            // Asumiendo que ConexionBD.obtener() devuelve una conexión gestionada o una nueva que se cierra en otro lado.
+        } catch (SQLException e) {
+            // Considerar loguear la excepción
+            throw e; // Relanzar para que la capa de servicio la maneje
         }
-        return false; // Retornar false si no se encuentran o en caso de error no manejado antes.
+        return false;
     }
 }
